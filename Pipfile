@@ -31,6 +31,9 @@ ipykernel = "*"
 deprecated = "*"
 #joblib = "*"
 opencv-python = "*"
+scikit-image = "*"
+tensorflow-gpu = "*"
+pillow = "*"
 
 [requires]
 python_version = "3.6"
