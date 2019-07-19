@@ -1,14 +1,13 @@
 # import the necessary packages
+
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 
 import imutils
-import importlib
-importlib.reload(imutils)
+from imutils.mj_paper import PAPER
 
 import numpy as np
 import argparse
-import imutils
 import cv2
 import os
 
@@ -19,20 +18,17 @@ from matplotlib.pyplot import imshow
 
 from pathlib import Path
 
-imutils.mj_paper
-imutils.text
-
 #%%
-data_path = Path("/media/batman/f4023177-48c1-456b-bff2-cc769f3ac277/ASSETS/Dogs vs Cats")
-image_path = data_path / '12499.jpg'
-image_path = data_path / '12500.jpg'
-assert image_path.exists()
+# data_path = Path("/media/batman/f4023177-48c1-456b-bff2-cc769f3ac277/ASSETS/Dogs vs Cats")
+# image_path = data_path / '12499.jpg'
+# image_path = data_path / '12500.jpg'
+data_path = Path("/media/batman/f4023177-48c1-456b-bff2-cc769f3ac277/DATA/airbus-ship-detection")
+assert data_path.exists()
+img_zip_path = data_path / 'train_v2.zip'
+assert img_zip_path.exists()
 
 
-#%%
-def open_rgb(image_path):
-    img = cv2.imread(str(image_path))
-    return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
 
 #%%
 def extract_color_histogram(image, bins=(8, 8, 8)):
@@ -56,7 +52,8 @@ def plot_hist(img):
 # .min 0
 # .max 255
 #
-img_original = open_rgb(image_path)
+img_original = imutils.open_rgb(image_path)
+
 plt.figure("TITLE")
 plt.imshow(img_original)
 plt.show()
