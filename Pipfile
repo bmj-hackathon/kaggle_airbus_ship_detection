@@ -34,6 +34,7 @@ opencv-python = "*"
 scikit-image = "*"
 tensorflow-gpu = "*"
 pillow = "*"
+imutils = {editable = true,path = "/home/batman/kaggle/imutils"}
 
 [requires]
 python_version = "3.6"
