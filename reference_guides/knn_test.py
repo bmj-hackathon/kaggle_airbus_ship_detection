@@ -15,8 +15,28 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.image as mplimg
 from matplotlib.pyplot import imshow
+import random
 
 from pathlib import Path
+import zipfile
+#%%
+import logging
+logger = logging.getLogger()
+logger.handlers = []
+
+# Set level
+logger.setLevel(logging.INFO)
+
+# Create formatter
+FORMAT = "%(levelno)-2s %(asctime)s : %(message)s"
+DATE_FMT = "%Y-%m-%d %H:%M:%S"
+formatter = logging.Formatter(FORMAT, DATE_FMT)
+
+# Create handler and assign
+handler = logging.StreamHandler(sys.stderr)
+handler.setFormatter(formatter)
+logger.handlers = [handler]
+logging.info("Logging started")
 
 #%%
 # data_path = Path("/media/batman/f4023177-48c1-456b-bff2-cc769f3ac277/ASSETS/Dogs vs Cats")
@@ -26,9 +46,16 @@ data_path = Path("/media/batman/f4023177-48c1-456b-bff2-cc769f3ac277/DATA/airbus
 assert data_path.exists()
 img_zip_path = data_path / 'train_v2.zip'
 assert img_zip_path.exists()
+img_zip = zipfile.ZipFile(img_zip_path)
+img_zip.filelist
 
+logging.info("{} with {} files".format(img_zip_path.name, len(img_zip.filelist) ))
+#%%
+this_file = random.choice(img_zip.filelist).filename
+img = imutils.load_rgb_from_zip(img_zip, this_file)
 
-
+plt.imshow(img)
+plt.show()
 
 #%%
 def extract_color_histogram(image, bins=(8, 8, 8)):
