@@ -62,34 +62,100 @@ logging.info("{} with {} files".format(img_zip_path.name, len(img_zip.filelist) 
 
 #%%
 df = pd.read_csv(record_path)
-# df = df.set_index('ImageId')
-df.head()
+# df.head()
+# df = df.groupby('ImageId').aggregate(lambda x: tuple(x))
+# df.set_index('ImageId')
 
 logging.info("{} with {} records".format(record_path.name, len(df)))
 logging.info("{} unique file names".format(df['ImageId'].unique().shape[0]))
-logging.info("{} records with mask information (ships)".format(df['EncodedPixels'].count()))
 # Flag if the record has a mask entry
-df['HasShip'] = df['EncodedPixels'].notnull()
+df['HasRLE'] = df['EncodedPixels'].notnull()
 # Flag if the record is NOT unique
 df['Duplicated'] = df['ImageId'].duplicated()
 df['Unique'] = df['Duplicated']==False
-logging.info("{} records with mask information (ship)".format(df['HasShip'].value_counts()[True]))
 
-df['ImageId'][df['ImageId'].is_unique]
+logging.info("{} records with mask information (ship)".format(df['HasRLE'].value_counts()[True]))
+logging.info("{} images have at least one ship".format(sum(df['HasRLE'] & df['Unique'])))
+
+df = df.set_index('ImageId')
+
+#%%
 
 
+image_name = np.random.choice(df[df['HasRLE']].index.values)
+records = df.loc[image_name]
+if type(records) == pd.core.series.Series:
+    records = pd.DataFrame(records)
+    records = records.T
+
+for i, rec in records.iterrows():
+    print(rec)
+    mask = imutils.convert_rle_mask(rec['EncodedPixels'])
+plt.imshow(mask)
+
+# mask
+# ret, thresh = cv2.threshold(mask, 50, 255, cv2.THRESH_BINARY)
+# gray_image = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+ret, thresh = cv2.threshold(mask, 0.5, 1, cv2.THRESH_BINARY)
+mask.max()
+
+contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+contours
+M = cv2.moments(contours[0])
+print("center X : '{}'".format(round(M['m10'] / M['m00'])))
+print("center Y : '{}'".format(round(M['m01'] / M['m00'])))
 
 
-df['HasShip'] & df['Unique']
+canv_simple = np.zeros((20,20,3))
+canv_simple = cv2.circle(canv_simple, (10,10), radius=2, color=(0, 255, 255), thickness=1)
+plt.imshow(canv_simple)
+plt.show()
 
-df['EncodedPixels'].unique()
+ax = plt.gca()
 
-df['EncodedPixels'].isnull()==False
+canvas = np.zeros_like(mask.shape)
 
-df.columns
-df['EncodedPixels']
-df['Shape'] = df.iloc[0,:].index
-img.shape
+canvas = np.zeros((mask.shape[0], mask.shape[1], 3))
+logging.info("Canvas {}".format(canvas.shape))
+img2 = cv2.circle(canvas, (round(M['m10'] / M['m00']), round(M['m01'] / M['m00'])), 5, (0, 100, 100), -1)
+cnt = contours[0]
+cv2.drawContours(img2, [cnt], -1, (0, 100, 100), 10)
+
+plt.imshow(img2)
+plt.show()
+
+# box_coords = imutils.get_bbox_p(mask)
+
+y1, y2, x1, x2 = imutils.get_bbox(mask)
+cv2.moments()
+pts = [(x1, y1), (x1, y2), (x2, y2), (x2, y1)]
+
+poly = plt.Polygon(pts, closed=True, fill=False)
+
+ax.add_patch(poly)
+
+plt.show()
+
+#%%
+# turn rle example into a list of ints
+
+# Example: 1 code
+fname = '000155de5.jpg'
+this_record = df[df['ImageId'] == fname]
+
+r = df.loc[df['ImageId'] == fname, 'EncodedPixels']
+for rle_string in r:
+    print(rle_string)
+    rle = [int(i) for i in rle_string.split()]
+    pairs = list(zip(rle[0:-1:2], rle[1::2]))
+
+rle = [int(i) for i in this_record['EncodedPixels'].split()]
+# turn list of ints into a list of (`start`, `length`) `pairs`
+
+# First 3 pixels:
+pairs[:3]
+
+
 
 #%%
 # Get 10 files
