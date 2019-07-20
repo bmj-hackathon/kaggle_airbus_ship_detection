@@ -54,7 +54,6 @@ img_zip = zipfile.ZipFile(img_zip_path)
 
 
 
-
 logging.info("{} with {} files".format(img_zip_path.name, len(img_zip.filelist) ))
 
 # train_files = pd.Series([zf.filename for zf in img_zip.filelist])
@@ -79,10 +78,12 @@ logging.info("{} images have at least one ship".format(sum(df['HasRLE'] & df['Un
 
 df = df.set_index('ImageId')
 
-#%%
-
-
+#%% Get all masks given an image ID
 image_name = np.random.choice(df[df['HasRLE']].index.values)
+image_name =  'b7dc66bab.jpg'
+
+img = imutils.load_rgb_from_zip(img_zip, image_name)
+
 records = df.loc[image_name]
 if type(records) == pd.core.series.Series:
     records = pd.DataFrame(records)
@@ -92,28 +93,72 @@ for i, rec in records.iterrows():
     print(rec)
     mask = imutils.convert_rle_mask(rec['EncodedPixels'])
 plt.imshow(mask)
+plt.show()
+plt.imshow(img)
+plt.show()
+#%% Get the contours and moments
 
-# mask
-# ret, thresh = cv2.threshold(mask, 50, 255, cv2.THRESH_BINARY)
-# gray_image = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
-ret, thresh = cv2.threshold(mask, 0.5, 1, cv2.THRESH_BINARY)
-mask.max()
+def get_contour(mask):
+    assert mask.ndim == 2
+    assert mask.min() == 0
+    assert mask.max() == 1
+    contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    logging.info("Found {} contours".format(len(contours)))
+    contour = contours[0]
+    return contour
 
-contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-contours
-M = cv2.moments(contours[0])
-print("center X : '{}'".format(round(M['m10'] / M['m00'])))
-print("center Y : '{}'".format(round(M['m01'] / M['m00'])))
+def fit_draw_rect(img, contour):
+    rect = cv2.minAreaRect(contour)
+    box = cv2.boxPoints(rect)
+    box = np.int0(box)
+    img2 = cv2.drawContours(img,[box],0,(0,0,255),2)
+    plt.imshow(img2)
+    plt.show()
+
+def fit_draw_ellipse(img, contour):
+    # returns the rotated rectangle in which the ellipse is inscribed
+    rotated_rect = cv2.fitEllipse(contour)
+    # (center x, center y), (width, height), angle
+    # Draw the ellipse object into the image
+    # Return the new image
+    return cv2.ellipse(img=img, box=rotated_rect, color=(0,255,0), thickness=4)
+
+def fit_draw_axes_lines(img, contour):
+    # (x1,y1), (x2,y2), angle = cv2.fitEllipse(contour)
+
+    rect = cv2.minAreaRect(contour)
+    vertices = cv2.boxPoints(rect)
+
+    # cv2.minEllipse[element].points(cv2.fitEllipse(contour))
+    img = cv2.line(img, tuple((vertices[0] + vertices[1])/2), tuple((vertices[2] + vertices[3])/2), (0,255,0), 2)
+    img = cv2.line(img, tuple((vertices[1] + vertices[2])/2), tuple((vertices[3] + vertices[0])/2), (0,255,0), 2)
+
+    # pt1,pt2,_ = ellipse
+    # img4 = cv2.line(img3, (int(x1), int(y1)), (int(x2), int(y2)), (0,255,0), 2)
+    return img
+
+def draw_ellipse_and_axis(img, contour):
+    img = fit_draw_ellipse(img, contour)
+    img = fit_draw_axes_lines(img, contour)
+    return img
 
 
-canv_simple = np.zeros((20,20,3))
-canv_simple = cv2.circle(canv_simple, (10,10), radius=2, color=(0, 255, 255), thickness=1)
-plt.imshow(canv_simple)
+#%%
+contour = get_contour(mask)
+M = cv2.moments(contour)
+center = (round(M['m10'] / M['m00']), round(M['m01'] / M['m00']))
+logging.info("center : '{}'".format(center))
+
+#%%
+
+img2 = fit_draw_ellipse(img, contour)
+plt.imshow(img2)
+plt.show()
+img3 = fit_draw_axes_lines(img, contour)
+plt.imshow(img3)
 plt.show()
 
-ax = plt.gca()
-
-canvas = np.zeros_like(mask.shape)
+#%%
 
 canvas = np.zeros((mask.shape[0], mask.shape[1], 3))
 logging.info("Canvas {}".format(canvas.shape))
