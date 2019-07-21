@@ -15,6 +15,10 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.image as mplimg
 from matplotlib.pyplot import imshow
+
+import seaborn as sns
+sns.set()
+
 import random
 import pandas as pd
 from pathlib import Path
@@ -81,8 +85,8 @@ def plot_hist(img, ax):
         histr = cv2.calcHist([img], [i], None, [256], [0, 256])
         ax.plot(histr, color=col)
 
-    ax.get_xaxis().set_visible(False)
-    ax.get_yaxis().set_visible(False)
+    # ax.get_xaxis().set_visible(False)
+    # ax.get_yaxis().set_visible(False)
 
 #%% Get all masks given an image ID
 

@@ -2,23 +2,29 @@
 #%% Start a fig
 fig = plt.figure(figsize=PAPER['A4_LANDSCAPE'], facecolor='white')
 # fig = plt.figure()
-fig.suptitle("Test {}".format('TEst'), fontsize=20)
-ax_image = plt.subplot2grid((3,3), (0,0), colspan=2, rowspan=2, fig=fig) # topleft
-ax_1 = plt.subplot2grid((3,3), (0,2), fig=fig)            # right
-ax_2 = plt.subplot2grid((3,3), (1,2), fig=fig)            # right
-ax_3 = plt.subplot2grid((3,3), (2,2), fig=fig)            # right
-ax_hist = plt.subplot2grid((3,3), (2,0), colspan=2, fig=fig)                       # bottom left
-fig.subplots_adjust(top=0.85)
-fig.tight_layout()
+# fig.suptitle("Test {}".format('TEst'), fontsize=20)
 
-#%%
+gs = plt.GridSpec(3, 3)
+gs.update(left=0.05, right=1, top=0.90)
 
+# gs = gridspec.GridSpec(3, 3)
+ax_image = plt.subplot(gs[0:2, 0:2])
+ax_hist = plt.subplot(gs[-1, 0:2])
+# ax2 = plt.subplot(gs[1, :-1])
+ax_1 = plt.subplot(gs[0, 2])
+ax_2 = plt.subplot(gs[1, 2])
+ax_3 = plt.subplot(gs[2, 2])
+
+#% #%%%%%%%%%%%%%%%%%%%%
 
 # plt.imshow(mask)
 # plt.show()
 image_id = np.random.choice(df[df['HasShip']].index.values)
 # image_id = df_by_image.index[-1]
 # image_id = df_by_image.index[9] # Select an image with 15 ships
+title_string = "{}, {} ships".format(image_id, int(df_by_image.loc[image_id, 'TotalShips']))
+fig.suptitle(title_string, x=0.05, ha='left')
+
 
 # fig = plt.figure(figsize=PAPER['A4_LANDSCAPE'], facecolor='white')
 
@@ -39,8 +45,16 @@ ax_image.get_xaxis().set_visible(False)
 ax_image.get_yaxis().set_visible(False)
 
 plot_hist(img, ax_hist)
-
+plt.tight_layout()
+plt.subplots_adjust(left=0.5, bottom=None, right=None, top=0.9, wspace=None, hspace=None)
 plt.show()
+
+#%% KNN
+size = (100, 100)
+size = (10, 10)
+
+pixels = cv2.resize(img, size)
+
 
 #%% OLD <<<
 
