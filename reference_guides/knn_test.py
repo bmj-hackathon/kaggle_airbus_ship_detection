@@ -26,6 +26,7 @@ logger.handlers = []
 
 # Set level
 logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 # Create formatter
 FORMAT = "%(levelno)-2s %(asctime)s : %(message)s"
@@ -51,100 +52,63 @@ assert record_path.exists()
 
 img_zip = zipfile.ZipFile(img_zip_path)
 
-
-
-
-logging.info("{} with {} files".format(img_zip_path.name, len(img_zip.filelist) ))
-
-# train_files = pd.Series([zf.filename for zf in img_zip.filelist])
-# df.index.intersection(train_files)
+logging.info("{} loaded with {} files".format(img_zip_path.name, len(img_zip.filelist) ))
 
 #%%
 df = pd.read_csv(record_path)
-# df.head()
-# df = df.groupby('ImageId').aggregate(lambda x: tuple(x))
-# df.set_index('ImageId')
 
 logging.info("{} with {} records".format(record_path.name, len(df)))
 logging.info("{} unique file names".format(df['ImageId'].unique().shape[0]))
 # Flag if the record has a mask entry
-df['HasRLE'] = df['EncodedPixels'].notnull()
+df['HasShip'] = df['EncodedPixels'].notnull()
 # Flag if the record is NOT unique
 df['Duplicated'] = df['ImageId'].duplicated()
 df['Unique'] = df['Duplicated']==False
 
-logging.info("{} records with mask information (ship)".format(df['HasRLE'].value_counts()[True]))
-logging.info("{} images have at least one ship".format(sum(df['HasRLE'] & df['Unique'])))
+logging.info("{} records with mask information (ship)".format(df['HasShip'].value_counts()[True]))
+logging.info("{} images have at least one ship".format(sum(df['HasShip'] & df['Unique'])))
 
+df_by_image = df.groupby('ImageId').agg({'HasShip': ['first', 'sum']})
+df_by_image.columns = ['HasShip', 'TotalShips']
+df_by_image.sort_values('TotalShips', ascending=False, inplace=True)
 df = df.set_index('ImageId')
+df_sample = df.head()
 
 #%% Get all masks given an image ID
-image_name = np.random.choice(df[df['HasRLE']].index.values)
-image_name =  'b7dc66bab.jpg'
+image_id = np.random.choice(df[df['HasShip']].index.values)
+# image_id = df_by_image.index[-1]
+# image_id = df_by_image.index[9] # Select an image with 15 ships
 
-img = imutils.load_rgb_from_zip(img_zip, image_name)
+img = imutils.load_rgb_from_zip(img_zip, image_id)
+logging.info("Loaded {}, size {} with {} ships".format(image_id, img.shape, df_by_image.loc[image_id]['TotalShips']))
 
-records = df.loc[image_name]
+records = df.loc[image_id]
+
+# Enforce return of dataframe as selection
 if type(records) == pd.core.series.Series:
     records = pd.DataFrame(records)
     records = records.T
 
+assert len(records) == df_by_image.loc[image_id]['TotalShips']
+
+# Iterate over each record
+cnt=0
 for i, rec in records.iterrows():
-    print(rec)
+    cnt+=1
+    logging.info("Processing record {} of {}".format(cnt, image_id))
     mask = imutils.convert_rle_mask(rec['EncodedPixels'])
-plt.imshow(mask)
-plt.show()
+    contour = imutils.get_contour(mask)
+    # img = imutils.draw_ellipse_and_axis(img, contour, thickness=2)
+    img = imutils.fit_draw_ellipse(img, contour, thickness=2)
+
+
+# plt.imshow(mask)
+# plt.show()
 plt.imshow(img)
 plt.show()
-#%% Get the contours and moments
-
-def get_contour(mask):
-    assert mask.ndim == 2
-    assert mask.min() == 0
-    assert mask.max() == 1
-    contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    logging.info("Found {} contours".format(len(contours)))
-    contour = contours[0]
-    return contour
-
-def fit_draw_rect(img, contour):
-    rect = cv2.minAreaRect(contour)
-    box = cv2.boxPoints(rect)
-    box = np.int0(box)
-    img2 = cv2.drawContours(img,[box],0,(0,0,255),2)
-    plt.imshow(img2)
-    plt.show()
-
-def fit_draw_ellipse(img, contour):
-    # returns the rotated rectangle in which the ellipse is inscribed
-    rotated_rect = cv2.fitEllipse(contour)
-    # (center x, center y), (width, height), angle
-    # Draw the ellipse object into the image
-    # Return the new image
-    return cv2.ellipse(img=img, box=rotated_rect, color=(0,255,0), thickness=4)
-
-def fit_draw_axes_lines(img, contour):
-    # (x1,y1), (x2,y2), angle = cv2.fitEllipse(contour)
-
-    rect = cv2.minAreaRect(contour)
-    vertices = cv2.boxPoints(rect)
-
-    # cv2.minEllipse[element].points(cv2.fitEllipse(contour))
-    img = cv2.line(img, tuple((vertices[0] + vertices[1])/2), tuple((vertices[2] + vertices[3])/2), (0,255,0), 2)
-    img = cv2.line(img, tuple((vertices[1] + vertices[2])/2), tuple((vertices[3] + vertices[0])/2), (0,255,0), 2)
-
-    # pt1,pt2,_ = ellipse
-    # img4 = cv2.line(img3, (int(x1), int(y1)), (int(x2), int(y2)), (0,255,0), 2)
-    return img
-
-def draw_ellipse_and_axis(img, contour):
-    img = fit_draw_ellipse(img, contour)
-    img = fit_draw_axes_lines(img, contour)
-    return img
-
 
 #%%
-contour = get_contour(mask)
+contour = imutils.get_contour(mask)
 M = cv2.moments(contour)
 center = (round(M['m10'] / M['m00']), round(M['m01'] / M['m00']))
 logging.info("center : '{}'".format(center))
