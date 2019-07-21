@@ -1,111 +1,48 @@
-# import the necessary packages
 
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import train_test_split
-
-import imutils
-from imutils.mj_paper import PAPER
-
-import numpy as np
-import argparse
-import cv2
-import os
-
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import matplotlib.image as mplimg
-from matplotlib.pyplot import imshow
-import random
-import pandas as pd
-from pathlib import Path
-import zipfile
-#%%
-import logging
-logger = logging.getLogger()
-logger.handlers = []
-
-# Set level
-logger.setLevel(logging.INFO)
-logger.setLevel(logging.DEBUG)
-
-# Create formatter
-FORMAT = "%(levelno)-2s %(asctime)s : %(message)s"
-DATE_FMT = "%Y-%m-%d %H:%M:%S"
-formatter = logging.Formatter(FORMAT, DATE_FMT)
-
-# Create handler and assign
-handler = logging.StreamHandler(sys.stderr)
-handler.setFormatter(formatter)
-logger.handlers = [handler]
-logging.info("Logging started")
+#%% Start a fig
+fig = plt.figure(figsize=PAPER['A4_LANDSCAPE'], facecolor='white')
+# fig = plt.figure()
+fig.suptitle("Test {}".format('TEst'), fontsize=20)
+ax_image = plt.subplot2grid((3,3), (0,0), colspan=2, rowspan=2, fig=fig) # topleft
+ax_1 = plt.subplot2grid((3,3), (0,2), fig=fig)            # right
+ax_2 = plt.subplot2grid((3,3), (1,2), fig=fig)            # right
+ax_3 = plt.subplot2grid((3,3), (2,2), fig=fig)            # right
+ax_hist = plt.subplot2grid((3,3), (2,0), colspan=2, fig=fig)                       # bottom left
+fig.subplots_adjust(top=0.85)
+fig.tight_layout()
 
 #%%
-# data_path = Path("/media/batman/f4023177-48c1-456b-bff2-cc769f3ac277/ASSETS/Dogs vs Cats")
-# image_path = data_path / '12499.jpg'
-# image_path = data_path / '12500.jpg'
-data_path = Path("/media/batman/f4023177-48c1-456b-bff2-cc769f3ac277/DATA/airbus-ship-detection")
-assert data_path.exists()
-img_zip_path = data_path / 'train_v2.zip'
-assert img_zip_path.exists()
-record_path = data_path / 'train_ship_segmentations_v2.csv'
-assert record_path.exists()
-
-img_zip = zipfile.ZipFile(img_zip_path)
-
-logging.info("{} loaded with {} files".format(img_zip_path.name, len(img_zip.filelist) ))
-
-#%%
-df = pd.read_csv(record_path)
-
-logging.info("{} with {} records".format(record_path.name, len(df)))
-logging.info("{} unique file names".format(df['ImageId'].unique().shape[0]))
-# Flag if the record has a mask entry
-df['HasShip'] = df['EncodedPixels'].notnull()
-# Flag if the record is NOT unique
-df['Duplicated'] = df['ImageId'].duplicated()
-df['Unique'] = df['Duplicated']==False
-
-logging.info("{} records with mask information (ship)".format(df['HasShip'].value_counts()[True]))
-logging.info("{} images have at least one ship".format(sum(df['HasShip'] & df['Unique'])))
-
-df_by_image = df.groupby('ImageId').agg({'HasShip': ['first', 'sum']})
-df_by_image.columns = ['HasShip', 'TotalShips']
-df_by_image.sort_values('TotalShips', ascending=False, inplace=True)
-df = df.set_index('ImageId')
-df_sample = df.head()
-
-#%% Get all masks given an image ID
-image_id = np.random.choice(df[df['HasShip']].index.values)
-# image_id = df_by_image.index[-1]
-# image_id = df_by_image.index[9] # Select an image with 15 ships
-
-img = imutils.load_rgb_from_zip(img_zip, image_id)
-logging.info("Loaded {}, size {} with {} ships".format(image_id, img.shape, df_by_image.loc[image_id]['TotalShips']))
-
-records = df.loc[image_id]
-
-# Enforce return of dataframe as selection
-if type(records) == pd.core.series.Series:
-    records = pd.DataFrame(records)
-    records = records.T
-
-assert len(records) == df_by_image.loc[image_id]['TotalShips']
-
-# Iterate over each record
-cnt=0
-for i, rec in records.iterrows():
-    cnt+=1
-    logging.info("Processing record {} of {}".format(cnt, image_id))
-    mask = imutils.convert_rle_mask(rec['EncodedPixels'])
-    contour = imutils.get_contour(mask)
-    # img = imutils.draw_ellipse_and_axis(img, contour, thickness=2)
-    img = imutils.fit_draw_ellipse(img, contour, thickness=2)
 
 
 # plt.imshow(mask)
 # plt.show()
-plt.imshow(img)
+image_id = np.random.choice(df[df['HasShip']].index.values)
+# image_id = df_by_image.index[-1]
+# image_id = df_by_image.index[9] # Select an image with 15 ships
+
+# fig = plt.figure(figsize=PAPER['A4_LANDSCAPE'], facecolor='white')
+
+object_summary = list()
+
+img, contours = get_ellipsed_images(image_id)
+for c in contours:
+    this_ship = dict()
+    M = cv2.moments(c)
+    this_ship['center'] = (round(M['m10'] / M['m00']), round(M['m01'] / M['m00']))
+
+    object_summary.append("Center: {}".format(this_ship['center']))
+
+summary_string = "\n".join(object_summary)
+
+ax_image.imshow(img)
+ax_image.get_xaxis().set_visible(False)
+ax_image.get_yaxis().set_visible(False)
+
+plot_hist(img, ax_hist)
+
 plt.show()
+
+#%% OLD <<<
 
 #%%
 contour = imutils.get_contour(mask)
@@ -185,15 +122,7 @@ def extract_color_histogram(image, bins=(8, 8, 8)):
     cv2.normalize(hist, hist)
     return hist.flatten()
 
-def plot_hist(img, ax):
-    color = ('r', 'g', 'b')
-    for i, col in enumerate(color):
-        histr = cv2.calcHist([img], [i], None, [256], [0, 256])
-        ax.plot(histr, color=col)
 
-    ax.get_xaxis().set_visible(False)
-    ax.get_yaxis().set_visible(False)
-        # ax.xlim([0, 256])
 
 
 # def plot_hist(img, ax):
@@ -235,8 +164,10 @@ plt.show()
 #%%
 
 
-fig = plt.figure(figsize=PAPER['A3_LANDSCAPE'], facecolor='white')
+fig = plt.figure(figsize=PAPER['A4_LANDSCAPE'], facecolor='white')
 fig.suptitle("Test {}".format('TEst'), fontsize=20)
+
+
 
 nrows = 2
 nrowplots = nrows * 2
