@@ -1,25 +1,15 @@
-from sklearn.datasets.samples_generator import make_blobs
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import cm
-from matplotlib import colors
+#%% Start a fig
 
-X, y_true = make_blobs(n_samples=300, centers=4,
-                       cluster_std=0.60, random_state=0)
-plt.scatter(X[:, 0], X[:, 1], s=50)
-plt.show()
+# Select an Image
+# image_id = df_by_image.index[-1]
+# image_id = df_by_image.index[9] # Select an image with 15 ships
+image_id = np.random.choice(df[df['HasShip']].index.values)
 
+img, contours = get_ellipsed_images(image_id)
+plt.interactive(True)
+plt.imshow(img)
+# plt.interactive(False)
 
-from sklearn.cluster import KMeans
-n_clusters = 2
-kmeans = KMeans(n_clusters=n_clusters)
-kmeans.fit(X)
-y_kmeans = kmeans.predict(X)
-
-plt.scatter(X[:, 0], X[:, 1], c=y_kmeans, s=50, cmap='viridis')
-
-centers = kmeans.cluster_centers_
-plt.scatter(centers[:, 0], centers[:, 1], c='black', s=200, alpha=0.5);
-plt.show()
 #%%
 img.shape
 
@@ -38,12 +28,15 @@ def plot_pixels(data, title, colors=None, N=10000):
     colors = colors[i]
     R, G, B = data[i].T
 
-    fig, ax = plt.subplots(1, 2, figsize=(16, 6))
+    fig, ax = plt.subplots(1, 3, figsize=(16, 6))
     ax[0].scatter(R, G, color=colors, marker='.')
     ax[0].set(xlabel='Red', ylabel='Green', xlim=(0, 1), ylim=(0, 1))
 
     ax[1].scatter(R, B, color=colors, marker='.')
     ax[1].set(xlabel='Red', ylabel='Blue', xlim=(0, 1), ylim=(0, 1))
+
+    ax[2].scatter(R, B, color=colors, marker='.')
+    ax[2].set(xlabel='Red', ylabel='Blue', xlim=(0, 1), ylim=(0, 1))
 
     fig.suptitle(title, size=20);
 
@@ -89,4 +82,30 @@ new_colors = kmeans.cluster_centers_[kmeans.predict(data)]
 plot_pixels(data, colors=new_colors,
             title="Reduced color space: 16 colors")
 
+plt.show()
+
+
+#%% OLD
+
+from sklearn.datasets.samples_generator import make_blobs
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
+from matplotlib import colors
+
+X, y_true = make_blobs(n_samples=300, centers=4,
+                       cluster_std=0.60, random_state=0)
+plt.scatter(X[:, 0], X[:, 1], s=50)
+plt.show()
+
+
+from sklearn.cluster import KMeans
+n_clusters = 2
+kmeans = KMeans(n_clusters=n_clusters)
+kmeans.fit(X)
+y_kmeans = kmeans.predict(X)
+
+plt.scatter(X[:, 0], X[:, 1], c=y_kmeans, s=50, cmap='viridis')
+
+centers = kmeans.cluster_centers_
+plt.scatter(centers[:, 0], centers[:, 1], c='black', s=200, alpha=0.5);
 plt.show()
