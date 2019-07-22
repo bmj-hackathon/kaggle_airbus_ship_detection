@@ -35,13 +35,14 @@ def plot_pixels(data, title, colors=None, N=10000):
     ax[1].scatter(R, B, color=colors, marker='.')
     ax[1].set(xlabel='Red', ylabel='Blue', xlim=(0, 1), ylim=(0, 1))
 
-    ax[2].scatter(R, B, color=colors, marker='.')
+    ax[2].scatter(G, B, color=colors, marker='.')
     ax[2].set(xlabel='Red', ylabel='Blue', xlim=(0, 1), ylim=(0, 1))
 
     fig.suptitle(title, size=20);
 
 plot_pixels(data, title='Input color space: 16 million possible colors')
 plt.show()
+
 #%%
 
 img_small = cv2.resize(img, (200,200))
@@ -51,6 +52,8 @@ r, g, b = cv2.split(img_small)
 fig = plt.figure()
 axis = fig.add_subplot(1, 1, 1, projection="3d")
 
+# fig = plt.figure()
+# ax = fig.gca(projection='3d')
 
 image_small_hsv = cv2.cvtColor(img_small, cv2.COLOR_RGB2HSV)
 data = img_small
