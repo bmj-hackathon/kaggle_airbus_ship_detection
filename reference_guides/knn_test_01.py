@@ -1,53 +1,82 @@
+# def plot_summary(image_id):
 
-#%% Start a fig
+#### Create fig ####
 fig = plt.figure(figsize=PAPER['A4_LANDSCAPE'], facecolor='white')
-# fig = plt.figure()
-# fig.suptitle("Test {}".format('TEst'), fontsize=20)
 
+#### Define the layout ####
 gs = plt.GridSpec(3, 3)
-gs.update(left=0.05, right=1, top=0.90)
+# Adjust margins
+gs.update(left=0.1, top=0.90)
 
-# gs = gridspec.GridSpec(3, 3)
+# Name and palce the axes
 ax_image = plt.subplot(gs[0:2, 0:2])
 ax_hist = plt.subplot(gs[-1, 0:2])
-# ax2 = plt.subplot(gs[1, :-1])
 ax_1 = plt.subplot(gs[0, 2])
 ax_2 = plt.subplot(gs[1, 2])
 ax_3 = plt.subplot(gs[2, 2])
 
-#% #%%%%%%%%%%%%%%%%%%%%
+# Manually shift the image axis
+pos_image1 = ax_image.get_position()
+pos_image2 = [pos_image1.x0 + 0.1, pos_image1.y0, pos_image1.width * 0.9, pos_image1.height]
+ax_image.set_position(pos_image2)
 
-# plt.imshow(mask)
-# plt.show()
-image_id = np.random.choice(df[df['HasShip']].index.values)
-# image_id = df_by_image.index[-1]
-# image_id = df_by_image.index[9] # Select an image with 15 ships
+# Text summary: Place a new axis object
+pos_text = [pos_image1.x0 - 0.05, pos_image1.y0, pos_image1.width * 0.35, pos_image1.height]
+ax_text = plt.axes(pos_text)
+# ax_text.get_xaxis().set_visible(False)
+# ax_text.get_yaxis().set_visible(False)
+ax_text.axis('off')
+
+#### Title ####
 title_string = "{}, {} ships".format(image_id, int(df_by_image.loc[image_id, 'TotalShips']))
 fig.suptitle(title_string, x=0.05, ha='left')
 
-
-# fig = plt.figure(figsize=PAPER['A4_LANDSCAPE'], facecolor='white')
-
+#### Summary table ####
+# table_df = pd.DataFrame(columns=['#', 'x', 'y', 'angle', 'area')
 object_summary = list()
-
 img, contours = get_ellipsed_images(image_id)
-for c in contours:
-    this_ship = dict()
+for i, c in enumerate(contours):
     M = cv2.moments(c)
-    this_ship['center'] = (round(M['m10'] / M['m00']), round(M['m01'] / M['m00']))
+    this_ship = dict()
+    this_ship['#'] = i
+    this_ship['x'] = round(M['m10'] / M['m00'])
+    this_ship['y'] = round(M['m01'] / M['m00'])
+    this_ship['area'] = int(cv2.contourArea(c))
+    this_ship['angle'] = 0
 
-    object_summary.append("Center: {}".format(this_ship['center']))
+    object_summary.append(this_ship)
 
-summary_string = "\n".join(object_summary)
+table_df = pd.DataFrame(object_summary)
+
+# ax_text.text( summary_string,verticalalignment='top')
+# mpl.table.Table(ax_text, loc)
+table_obj = ax_text.table(cellText=table_df.values, colLabels=table_df.columns, loc='upper left')
+for (row, col), cell in table_obj.get_celld().items():
+  if (row == 0) or (col == -1):
+    cell.set_text_props(fontproperties=mpl.font_manager.FontProperties(weight='bold'))
 
 ax_image.imshow(img)
-ax_image.get_xaxis().set_visible(False)
-ax_image.get_yaxis().set_visible(False)
+ax_image.axis('off')
 
 plot_hist(img, ax_hist)
-plt.tight_layout()
-plt.subplots_adjust(left=0.5, bottom=None, right=None, top=0.9, wspace=None, hspace=None)
+
+# plt.tight_layout()
+# plt.subplots_adjust(left=0.5, bottom=None, right=None, top=0.9, wspace=None, hspace=None)
 plt.show()
+
+
+#%% Start a fig
+
+# Select an Image
+# image_id = df_by_image.index[-1]
+# image_id = df_by_image.index[9] # Select an image with 15 ships
+image_id = np.random.choice(df[df['HasShip']].index.values)
+
+plt.interactive(True)
+plt.interactive(False)
+
+
+#%% OLD <<<
 
 #%% KNN
 size = (100, 100)
@@ -55,8 +84,6 @@ size = (10, 10)
 
 pixels = cv2.resize(img, size)
 
-
-#%% OLD <<<
 
 #%%
 contour = imutils.get_contour(mask)
