@@ -2,8 +2,10 @@
 
 # Select an Image
 # image_id = df_by_image.index[-1]
-# image_id = df_by_image.index[9] # Select an image with 15 ships
-image_id = np.random.choice(df[df['HasShip']].index.values)
+image_id = df_by_image.index[9] # Select an image with 15 ships
+image_id = df_by_image.index[1] # Select an image with 15 ships
+image_id = df_by_image.index[2] # Select an image with 15 ships
+# image_id = np.random.choice(df[df['HasShip']].index.values)
 
 plt.interactive(True)
 plt.interactive(False)
@@ -28,9 +30,11 @@ gs.update(left=0.1, top=0.90)
 # Name and palce the axes
 ax_image = plt.subplot(gs[0:2, 0:2])
 ax_hist = plt.subplot(gs[-1, 0:2])
-ax_1 = plt.subplot(gs[0, 2])
+ax_1 = plt.subplot(gs[0, 2], projection="3d")
 ax_2 = plt.subplot(gs[1, 2])
 ax_3 = plt.subplot(gs[2, 2])
+
+# fig.add_subplot(1, 1, 1,
 
 # Manually shift the image axis
 pos_image1 = ax_image.get_position()
@@ -59,7 +63,8 @@ for i, c in enumerate(contours):
     this_ship['x'] = round(M['m10'] / M['m00'])
     this_ship['y'] = round(M['m01'] / M['m00'])
     this_ship['area'] = int(cv2.contourArea(c))
-    this_ship['angle'] = 0
+    rotated_rect = cv2.fitEllipse(c)
+    this_ship['angle'] = round(rotated_rect[2])
 
     object_summary.append(this_ship)
 
@@ -72,12 +77,20 @@ for (row, col), cell in table_obj.get_celld().items():
   if (row == 0) or (col == -1):
     cell.set_text_props(fontproperties=mpl.font_manager.FontProperties(weight='bold'))
 
+
+#### Plot image ####
 ax_image.imshow(img)
 ax_image.axis('off')
 
+#### Plot histogram ####
 plot_hist(img, ax_hist)
+
+#### Plot kmeans ####
+plot_kmeans_color(ax_1, img)
+
 
 # plt.tight_layout()
 # plt.subplots_adjust(left=0.5, bottom=None, right=None, top=0.9, wspace=None, hspace=None)
+plt.savefig("{}.pdf".format(image_id), dpi=400)
 plt.show()
 

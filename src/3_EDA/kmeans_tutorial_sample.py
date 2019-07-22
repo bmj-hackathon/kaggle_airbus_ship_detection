@@ -85,48 +85,53 @@ plt.show()
 #%% Run the K Means
 
 import warnings; warnings.simplefilter('ignore')  # Fix NumPy issues.
+def plot_kmeans_color(ax, img):
 
-from sklearn.cluster import MiniBatchKMeans
-num_clusters = 2
-kmeans = MiniBatchKMeans(2)
-kmeans.fit(data)
+    logging.info("Processing image of shape {}".format(img.shape))
+    data = img / 255
+    logging.info("Changed values to 0-1 range".format(img.shape))
+    data = data.reshape(data.shape[0] * data.shape[1], data.shape[2])
+    logging.info("Reshape to pixel list {}".format(data.shape))
 
-all_new_colors = kmeans.cluster_centers_[kmeans.predict(data)]
+    num_clusters = 2
+    kmeans = sk.cluster.MiniBatchKMeans(2)
+    kmeans.fit(data)
 
-all_cluster_labels = kmeans.labels_
-cluster_counts = np.bincount(all_cluster_labels).tolist()
-cluster_names = np.unique(all_cluster_labels).tolist()
-cluster_colors = np.unique(all_new_colors, axis=0)
-# cluster_colors *= 255
+    all_new_colors = kmeans.cluster_centers_[kmeans.predict(data)]
 
-N_points = 20000
+    all_cluster_labels = kmeans.labels_
+    cluster_counts = np.bincount(all_cluster_labels).tolist()
+    cluster_names = np.unique(all_cluster_labels).tolist()
+    cluster_colors = np.unique(all_new_colors, axis=0)
 
-# Generate a list of 20000 indices
-np.random.RandomState(0) # Init the RNG
-i = rng.permutation(data.shape[0])[:N_points]
-colors_i = all_new_colors[i]
-labels_i = all_cluster_labels[i]
-R, G, B = data[i].T
+    N_points = 20000
 
-fig = plt.figure()
-ax = fig.add_subplot(1, 1, 1, projection="3d")
+    # Generate a list of 20000 indices
+    np.random.RandomState(0) # Init the RNG
+    i = rng.permutation(data.shape[0])[:N_points]
+    colors_i = all_new_colors[i]
+    labels_i = all_cluster_labels[i]
+    R, G, B = data[i].T
 
-# cluster_markers = ['x','+']
-cluster_markers = ['1','+']
+    # fig = plt.figure()
+    # ax = fig.add_subplot(1, 1, 1, projection="3d")
 
-for cluster_name, cluster_marker in zip(cluster_names, cluster_markers):
-    print(cluster_name, cluster_marker)
-    this_cluster_mask = labels_i == cluster_name
+    # cluster_markers = ['x','+']
+    cluster_markers = ['1','+']
 
-    logging.info("Cluster {} with {} points".format(cluster_name, sum(this_cluster_mask)))
+    for cluster_name, cluster_marker in zip(cluster_names, cluster_markers):
+        print(cluster_name, cluster_marker)
+        this_cluster_mask = labels_i == cluster_name
 
-    # sum(this_cluster_mask)
+        logging.info("Cluster {} with {} points".format(cluster_name, sum(this_cluster_mask)))
 
-    ax.scatter(R[this_cluster_mask], G[this_cluster_mask], B[this_cluster_mask], color=colors_i[this_cluster_mask], marker=cluster_marker, depthshade=False)
+        # sum(this_cluster_mask)
 
-ax.set(xlabel='Red', ylabel='Green', zlabel='Blue', xlim=(0, 1), ylim=(0, 1))
-plt.show()
+        ax.scatter(R[this_cluster_mask], G[this_cluster_mask], B[this_cluster_mask], color=colors_i[this_cluster_mask], marker=cluster_marker, depthshade=False)
 
+    ax.set(xlabel='Red', ylabel='Green', zlabel='Blue', xlim=(0, 1), ylim=(0, 1))
+# plt.show()
+#%%
 
 plt.show()
 

@@ -17,6 +17,8 @@ import matplotlib.image as mplimg
 from matplotlib.pyplot import imshow
 from mpl_toolkits.mplot3d import Axes3D
 
+import sklearn as sk
+
 import seaborn as sns
 sns.set()
 
