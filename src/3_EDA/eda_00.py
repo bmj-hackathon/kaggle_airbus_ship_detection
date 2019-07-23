@@ -62,6 +62,17 @@ class Image():
 
         logging.info("{} records selected for {}".format(len(self.records), self.image_id))
 
+    def moments(self):
+        """ Just a docstring for now
+            // spatial moments
+    double  m00, m10, m01, m20, m11, m02, m30, m21, m12, m03;
+    // central moments
+    double  mu20, mu11, mu02, mu30, mu21, mu12, mu03;
+    // central normalized moments
+    double  nu20, nu11, nu02, nu30, nu21, nu12, nu03;
+        :return:
+        """
+
     def load_ships(self):
         """Augment the basic df with mask, contour, data
 
@@ -84,26 +95,19 @@ class Image():
         self.records['x'] = self.records.apply(lambda row: get_x(row), axis=1)
         self.records['y'] = self.records.apply(lambda row: get_y(row), axis=1)
 
+        # ( Same as m00!)
         self.records['area'] = self.records.apply(lambda row: cv2.contourArea(row['contour']), axis=1)
+        self.records['rotated_rect'] = self.records.apply(lambda row: cv2.minAreaRect(row['contour']), axis=1)
+        self.records['angle'] = self.records.apply(lambda row: row['rotated_rect'][2], axis=1)
+        # print(self.records['rotated_rect'])
+        # print(type(self.records['rotated_rect'].iloc[0]))
+
+
         # self.records['area'] = int()
         # self.records['rotated_rect'] = cv2.fitEllipse(c)
 
+        self.records.drop(['mask', 'contour', 'moments', 'rotated_rect', 'EncodedPixels'], axis=1, inplace=True)
 
-
-
-
-        # Iterate over each record
-        if 0:
-            contours = list()
-            cnt=0
-            for i, rec in self.records.iterrows():
-                cnt+=1
-                # logging.debug("Processing record {} of {}".format(cnt, image_id))
-                mask = self.convert_rle_to_mask(rec['EncodedPixels'], self.img.shape[0:2])
-                contour = self.get_contour(mask)
-                contours.append(contour)
-                # img = imutils.draw_ellipse_and_axis(img, contour, thickness=2)
-            # return img, contours
 
     def draw_ellipses_to_canvas(self):
         img = imutils.fit_draw_ellipse(self.img, contour, thickness=2)
@@ -135,20 +139,32 @@ class Image():
         contour = contours[0]
         # logging.debug("Returning {} fit contours over mask pixels".format(len(contours)))
         return contour
-
-
+#%%
 image_id = df_by_image.index[2] # Select an image with 15 ships
 image = Image(image_id)
 image.load(img_zip, df)
 image.load_ships()
 # print(image)
 # image.get_contours()
-r = image.records.transpose()
+r = image.records
+# r.drop('rotated_rect', axis=1, inplace=True)
 # hash(image.records['EncodedPixels'].values)
 
+print(r.head())
+print(r.columns)
+print(r.index)
+# print(r[:,'rotated_rect'])
+# print(r.loc[r.index[0],'rotated_rect'])
+# type(r.loc[r.index[0],'rotated_rect'])
+# print(r.iloc[0,])
 
+# r.index
+# df.index[#]
 
-#%% Start a fig
+image.img
+# rotated_rect
+
+# %% Start a fig
 
 # Select an Image
 # image_id = df_by_image.index[-1]
