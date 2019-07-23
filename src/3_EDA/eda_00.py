@@ -40,6 +40,9 @@ class Image():
     def shape2D(self):
         return self.img.shape[0:2]
 
+    def get_img_bgr(self):
+        return cv2.cvtColor(self.img, cv2.COLOR_RGB2BGR)
+
     def load(self, image_zip, df):
         """load an image into ndarray as RGB, and load ship records
 
