@@ -90,8 +90,10 @@ class Image():
         self.records['contour'] = self.records.apply(lambda row: self.get_contour(row['mask']), axis=1)
         self.records['moments'] = self.records.apply(lambda row: cv2.moments(row['contour']), axis=1)
 
-        def get_x(row): return round(row['moments']['m10'] / row['moments']['m00'])
-        def get_y(row): return round(row['moments']['m01'] / row['moments']['m00'])
+        # def get_x(row): return round(row['moments']['m10'] / row['moments']['m00'])
+        def get_x(row): return row['moments']['m10'] / row['moments']['m00']
+        # def get_y(row): return round(row['moments']['m01'] / row['moments']['m00'])
+        def get_y(row): return row['moments']['m01'] / row['moments']['m00']
         self.records['x'] = self.records.apply(lambda row: get_x(row), axis=1)
         self.records['y'] = self.records.apply(lambda row: get_y(row), axis=1)
 
@@ -108,6 +110,8 @@ class Image():
 
         self.records.drop(['mask', 'contour', 'moments', 'rotated_rect', 'EncodedPixels'], axis=1, inplace=True)
 
+    def ship_summary_table(self):
+        return self.records.round(1)
 
     def draw_ellipses_to_canvas(self):
         img = imutils.fit_draw_ellipse(self.img, contour, thickness=2)
@@ -162,6 +166,7 @@ print(r.index)
 # df.index[#]
 
 image.img
+image.ship_summary_table()
 # rotated_rect
 
 # %% Start a fig
