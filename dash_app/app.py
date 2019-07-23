@@ -3,6 +3,8 @@ print(dash.__version__)
 import dash_core_components as dcc
 import dash_html_components as dhtml
 
+# from server import server
+
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
