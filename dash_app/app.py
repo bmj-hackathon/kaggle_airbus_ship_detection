@@ -20,10 +20,14 @@ app.layout = dhtml.Div(children=[
                 {'x': [1, 2, 3], 'y': [2, 4, 5], 'type': 'bar', 'name': u'Montréal'},
             ],
             'layout': {
-                'title': 'Dash Data Visualization'
+                'title': 'Test title 12'
             }
         }
-    )
+    ),
+    dhtml.H3(children='TEST H3'),
+    dhtml.Div(children=[
+        dhtml.H2(children='Test h2 inside DIV'),
+    ])
 ])
 
 if __name__ == '__main__':

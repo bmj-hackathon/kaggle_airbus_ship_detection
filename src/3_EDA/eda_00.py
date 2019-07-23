@@ -1,3 +1,72 @@
+#%% Image class
+
+class Image():
+    def __init__(self, image_id):
+        """
+
+        :param image_id:
+
+        Attributes:
+            image_id    The ID string
+            img         The image as an ndarray
+            records     DataFrame of records from the original CSV file
+            encoding    A string representing the OpenCV encoding of the underlying img ndarray
+        """
+        self.image_id = image_id
+        self.encoding = None
+        self.records = None
+        self.img = None
+
+        logging.info("Image id: {}".format(self.image_id))
+
+    def __str__(self):
+        return "Image ID {} {} encoded, with {} ships".format(self.image_id, self.encoding, self.num_ships)
+
+    def load(self, image_zip, df):
+        self.img = imutils.load_rgb_from_zip(image_zip, image_id)
+        self.encoding = 'RGB'
+        logging.info("Loaded {}, size {} ".format(image_id, self.img.shape))
+
+        # records = df.loc[[ image_id ]]
+        self.records = df[df.index == self.image_id]
+        assert isinstance(self.records, pd.DataFrame)
+
+        # # Enforce dataframe
+        # if type(records) == pd.core.series.Series:
+        #     records = pd.DataFrame(records)
+        #     records = records.T
+
+        # assert len(records) == df_by_image.loc[image_id]['TotalShips']
+        logging.info("{} records selected for {}".format(len(self.records), self.image_id))
+
+    @property
+    def num_ships(self):
+        return len(self.records)
+
+    def get_contours(self):
+        # Iterate over each record
+        contours = list()
+        cnt=0
+        for i, rec in records.iterrows():
+            cnt+=1
+            logging.debug("Processing record {} of {}".format(cnt, image_id))
+            mask = imutils.convert_rle_mask(rec['EncodedPixels'])
+            contour = imutils.get_contour(mask)
+            contours.append(contour)
+            # img = imutils.draw_ellipse_and_axis(img, contour, thickness=2)
+            img = imutils.fit_draw_ellipse(img, contour, thickness=2)
+        return img, contours
+
+
+
+
+image_id = df_by_image.index[2] # Select an image with 15 ships
+image = Image(image_id)
+image.load(img_zip, df)
+print(image)
+
+
+
 #%% Start a fig
 
 # Select an Image
@@ -13,9 +82,6 @@ plt.interactive(False)
 #%%
 # def plot_summary(image_id):
 
-class ImageReport():
-    def __init__(self):
-        logging.info("New".format())
 
 
 #%%

@@ -11,13 +11,13 @@ assert record_path.exists()
 
 img_zip = zipfile.ZipFile(img_zip_path)
 
-logging.info("{} loaded with {} files".format(img_zip_path.name, len(img_zip.filelist) ))
+logging.info("Image data: '{}' loaded from {} with {} files".format('img_zip', img_zip_path.name, len(img_zip.filelist) ))
 
 #%%
 df = pd.read_csv(record_path)
 
 logging.info("{} with {} records".format(record_path.name, len(df)))
-logging.info("{} unique file names".format(df['ImageId'].unique().shape[0]))
+logging.info("{} unique file names found in df".format(df['ImageId'].unique().shape[0]))
 # Flag if the record has a mask entry
 df['HasShip'] = df['EncodedPixels'].notnull()
 # Flag if the record is NOT unique
