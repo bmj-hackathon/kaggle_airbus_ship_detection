@@ -28,6 +28,18 @@ class Image():
     def __str__(self):
         return "Image ID {} {} encoded, with {} ships".format(self.image_id, self.encoding, self.num_ships)
 
+    @property
+    def num_ships(self):
+        return len(self.records)
+
+    @property
+    def shape(self):
+        return self.img.shape
+
+    @property
+    def shape2D(self):
+        return self.img.shape[0:2]
+
     def load(self, image_zip, df):
         """load an image into ndarray as RGB, and load ship records
 
@@ -40,42 +52,60 @@ class Image():
         self.encoding = 'RGB'
         logging.info("Loaded {}, size {} ".format(image_id, self.img.shape))
 
-        # records = df.loc[[ image_id ]]
         self.records = df[df.index == self.image_id]
         assert isinstance(self.records, pd.DataFrame)
 
+        # TODO: check warning
         self.records['ship_id'] = self.records.apply(lambda row: hash(row['EncodedPixels']), axis=1)
         self.records.set_index('ship_id', inplace=True)
         self.records.drop(['HasShip', 'Duplicated', 'Unique'], axis=1, inplace=True)
-        # # Enforce dataframe
-        # if type(records) == pd.core.series.Series:
-        #     records = pd.DataFrame(records)
-        #     records = records.T
 
-        # assert len(records) == df_by_image.loc[image_id]['TotalShips']
         logging.info("{} records selected for {}".format(len(self.records), self.image_id))
 
-    @property
-    def num_ships(self):
-        return len(self.records)
-
     def load_ships(self):
+        """Augment the basic df with mask, contour, data
+
+        mask        - ndarray of 0 or 1
+        contour     - opencv2 contour object
+        moments     -
+
+        :return:
+        """
         assert isinstance(self.img, np.ndarray), "No image loaded"
         assert self.num_ships, "No ships in this image"
 
-        self.records['mask'] = self.records.apply(lambda row: self.get_contour(row['EncodedPixels']))
+        # TODO: check warnings
+        self.records['mask'] = self.records.apply(lambda row: self.convert_rle_to_mask(row['EncodedPixels'], self.shape2D), axis=1)
+        self.records['contour'] = self.records.apply(lambda row: self.get_contour(row['mask']), axis=1)
+        self.records['moments'] = self.records.apply(lambda row: cv2.moments(row['contour']), axis=1)
+        self.records['area'] = self.records.apply(lambda row: cv2.moments(row['contour']), axis=1)
+
+        def get_x(row): return round(row['moments']['m10'] / row['moments']['m00'])
+        def get_y(row): return round(row['moments']['m01'] / row['moments']['m00'])
+
+        self.records['x'] = self.records.apply(lambda row: get_x(row), axis=1)
+        self.records['y'] = self.records.apply(lambda row: get_y(row), axis=1)
+
+        # self.records['y'] = round(M['m01'] / M['m00'])
+        # self.records['area'] = int(cv2.contourArea(c))
+        # self.records['rotated_rect'] = cv2.fitEllipse(c)
+
+
+
+
 
         # Iterate over each record
-        contours = list()
-        cnt=0
-        for i, rec in self.records.iterrows():
-            cnt+=1
-            # logging.debug("Processing record {} of {}".format(cnt, image_id))
-            mask = self.convert_rle_to_mask(rec['EncodedPixels'], self.img.shape[0:2])
-            contour = self.get_contour(mask)
-            contours.append(contour)
-            # img = imutils.draw_ellipse_and_axis(img, contour, thickness=2)
-        # return img, contours
+        if 0:
+            contours = list()
+            cnt=0
+            for i, rec in self.records.iterrows():
+                cnt+=1
+                # logging.debug("Processing record {} of {}".format(cnt, image_id))
+                mask = self.convert_rle_to_mask(rec['EncodedPixels'], self.img.shape[0:2])
+                contour = self.get_contour(mask)
+                contours.append(contour)
+                # img = imutils.draw_ellipse_and_axis(img, contour, thickness=2)
+            # return img, contours
 
     def draw_ellipses_to_canvas(self):
         img = imutils.fit_draw_ellipse(self.img, contour, thickness=2)
@@ -112,9 +142,10 @@ class Image():
 image_id = df_by_image.index[2] # Select an image with 15 ships
 image = Image(image_id)
 image.load(img_zip, df)
-print(image)
-image.get_contours()
-r = image.records
+image.load_ships()
+# print(image)
+# image.get_contours()
+r = image.records.transpose()
 # hash(image.records['EncodedPixels'].values)
 
 
