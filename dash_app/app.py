@@ -142,7 +142,7 @@ path_image_class = Path().cwd() / '..' / 'src' / '3_EDA'
 path_image_class = path_image_class.resolve()
 sys.path.append(str(path_image_class.absolute()))
 print(sys.path)
-from eda_00 import Image
+from eda_00 import Image, convert_rgb_img_to_b64string
 
 
 #%%%%%%%%%%%% LOAD 1 IMAGE INSTANCE
@@ -155,17 +155,7 @@ r = image.records
 image.ship_summary_table()
 kmeans = image.k_means()
 
-# Convert the in-memory image to .jpg format
-import base64
-retval, buffer = cv2.imencode('.jpg', image.get_img_bgr())
-# Convert to base64 string
-jpg_as_text = base64.b64encode(buffer)
-# jpg_as_text = str(jpg_as_text)
-jpg_as_text = jpg_as_text.decode()
-# print(jpg_as_text)
-logging.info("Image encoded to jpg base64 string".format())
-print(jpg_as_text)
-
+jpg_data = convert_rgb_img_to_b64string(image.img)
 
 
 # cv2.imencode('.jpg', image.img)[1].tostring('base64')
@@ -208,7 +198,7 @@ app.layout = dhtml.Div(children=[
         dhtml.H2(children="Image {}".format(image.image_id)),
 
         # dhtml.Img(src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAUA AAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO 9TXL0Y4OHwAAAABJRU5ErkJggg=="),
-        dhtml.Img(src="data:image/png;base64, {}".format(jpg_as_text))
+        dhtml.Img(src="data:image/png;base64, {}".format(jpg_data))
     ])
     # dhtml.Div(InteractiveImage('image', 'dash_app.png'), className='six columns'),
 

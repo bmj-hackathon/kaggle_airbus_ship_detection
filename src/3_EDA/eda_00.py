@@ -6,6 +6,7 @@ import sklearn as sk
 # import sklearn.cluster
 import cv2
 import pandas as pd
+import base64
 
 class Image():
     def __init__(self, image_id):
@@ -174,5 +175,19 @@ class Image():
         return kmeans
         # all_new_colors = kmeans.cluster_centers_[kmeans.predict(data)]
 
-def convert_img_to_b64string(img):
+def convert_rgb_img_to_b64string(img):
+    # Convert image to BGR from RGB
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
+    # Encode the in-memory image to .jpg format
+    retval, buffer = cv2.imencode('.jpg', img)
+
+    # Convert to base64 raw bytes
+    jpg_as_text = base64.b64encode(buffer)
+
+    # Decode the bytes to utf
+    jpg_as_text = jpg_as_text.decode(encoding="utf-8")
+
+    logging.info("Image encoded to jpg base64 string".format())
+
+    return jpg_as_text
