@@ -46,7 +46,7 @@ class Image():
 
         self.records['ship_id'] = self.records.apply(lambda row: hash(row['EncodedPixels']), axis=1)
         self.records.set_index('ship_id', inplace=True)
-
+        self.records.drop(['HasShip', 'Duplicated', 'Unique'], axis=1, inplace=True)
         # # Enforce dataframe
         # if type(records) == pd.core.series.Series:
         #     records = pd.DataFrame(records)
@@ -59,9 +59,11 @@ class Image():
     def num_ships(self):
         return len(self.records)
 
-    def get_contours(self):
+    def load_ships(self):
         assert isinstance(self.img, np.ndarray), "No image loaded"
         assert self.num_ships, "No ships in this image"
+
+        self.records['mask'] = self.records.apply(lambda row: self.get_contour(row['EncodedPixels']))
 
         # Iterate over each record
         contours = list()
