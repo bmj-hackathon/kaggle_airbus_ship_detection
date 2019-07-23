@@ -11,11 +11,17 @@ class Image():
             img         The image as an ndarray
             records     DataFrame of records from the original CSV file
             encoding    A string representing the OpenCV encoding of the underlying img ndarray
+            ships       A list of Ship dictionary entries
+                ship_id         - Hash of the RLE string
+                EncodedPixels   - RLE string
+                center          -
         """
+
         self.image_id = image_id
         self.encoding = None
         self.records = None
         self.img = None
+        self.contours = None
 
         logging.info("Image id: {}".format(self.image_id))
 
@@ -23,6 +29,13 @@ class Image():
         return "Image ID {} {} encoded, with {} ships".format(self.image_id, self.encoding, self.num_ships)
 
     def load(self, image_zip, df):
+        """load an image into ndarray as RGB, and load ship records
+
+        :param image_zip:
+        :param df:
+        :return:
+        """
+
         self.img = imutils.load_rgb_from_zip(image_zip, image_id)
         self.encoding = 'RGB'
         logging.info("Loaded {}, size {} ".format(image_id, self.img.shape))
@@ -30,6 +43,9 @@ class Image():
         # records = df.loc[[ image_id ]]
         self.records = df[df.index == self.image_id]
         assert isinstance(self.records, pd.DataFrame)
+
+        self.records['ship_id'] = self.records.apply(lambda row: hash(row['EncodedPixels']), axis=1)
+        self.records.set_index('ship_id', inplace=True)
 
         # # Enforce dataframe
         # if type(records) == pd.core.series.Series:
@@ -44,26 +60,60 @@ class Image():
         return len(self.records)
 
     def get_contours(self):
+        assert isinstance(self.img, np.ndarray), "No image loaded"
+        assert self.num_ships, "No ships in this image"
+
         # Iterate over each record
         contours = list()
         cnt=0
-        for i, rec in records.iterrows():
+        for i, rec in self.records.iterrows():
             cnt+=1
-            logging.debug("Processing record {} of {}".format(cnt, image_id))
-            mask = imutils.convert_rle_mask(rec['EncodedPixels'])
-            contour = imutils.get_contour(mask)
+            # logging.debug("Processing record {} of {}".format(cnt, image_id))
+            mask = self.convert_rle_to_mask(rec['EncodedPixels'], self.img.shape[0:2])
+            contour = self.get_contour(mask)
             contours.append(contour)
             # img = imutils.draw_ellipse_and_axis(img, contour, thickness=2)
-            img = imutils.fit_draw_ellipse(img, contour, thickness=2)
-        return img, contours
+        # return img, contours
 
+    def draw_ellipses_to_canvas(self):
+        img = imutils.fit_draw_ellipse(self.img, contour, thickness=2)
 
+    def convert_rle_to_mask(self, rle, shape):
+        """convert RLE mask into 2d pixel array"""
+
+        # Initialize a zero canvas (one-dimensional here)
+        mask = np.zeros(shape[0] * shape[1], dtype=np.uint8)
+
+        # Split each run-length string
+        s = rle.split()
+        for i in range(len(s) // 2):
+            start = int(s[2 * i]) - 1
+            length = int(s[2 * i + 1])
+            mask[start:start + length] = 1 # Assign this run to ones
+        # Reshape to 2D
+        img2 = mask.reshape(shape).T
+        return img2
+
+    def get_contour(self, mask):
+        """Return a cv2 contour object from a binary 0/1 mask"""
+
+        assert mask.ndim == 2
+        assert mask.min() == 0
+        assert mask.max() == 1
+        contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        assert len(contours) == 1, "Too many contours in this mask!"
+        contour = contours[0]
+        # logging.debug("Returning {} fit contours over mask pixels".format(len(contours)))
+        return contour
 
 
 image_id = df_by_image.index[2] # Select an image with 15 ships
 image = Image(image_id)
 image.load(img_zip, df)
 print(image)
+image.get_contours()
+r = image.records
+# hash(image.records['EncodedPixels'].values)
 
 
 
