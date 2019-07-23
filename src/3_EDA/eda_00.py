@@ -78,16 +78,14 @@ class Image():
         self.records['mask'] = self.records.apply(lambda row: self.convert_rle_to_mask(row['EncodedPixels'], self.shape2D), axis=1)
         self.records['contour'] = self.records.apply(lambda row: self.get_contour(row['mask']), axis=1)
         self.records['moments'] = self.records.apply(lambda row: cv2.moments(row['contour']), axis=1)
-        self.records['area'] = self.records.apply(lambda row: cv2.moments(row['contour']), axis=1)
 
         def get_x(row): return round(row['moments']['m10'] / row['moments']['m00'])
         def get_y(row): return round(row['moments']['m01'] / row['moments']['m00'])
-
         self.records['x'] = self.records.apply(lambda row: get_x(row), axis=1)
         self.records['y'] = self.records.apply(lambda row: get_y(row), axis=1)
 
-        # self.records['y'] = round(M['m01'] / M['m00'])
-        # self.records['area'] = int(cv2.contourArea(c))
+        self.records['area'] = self.records.apply(lambda row: cv2.contourArea(row['contour']), axis=1)
+        # self.records['area'] = int()
         # self.records['rotated_rect'] = cv2.fitEllipse(c)
 
 
