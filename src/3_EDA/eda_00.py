@@ -143,30 +143,48 @@ class Image():
         contour = contours[0]
         # logging.debug("Returning {} fit contours over mask pixels".format(len(contours)))
         return contour
+
+    def k_means(self, num_clusters=2):
+        logging.info("Processing {} image of shape {}".format(self.encoding, self.img.shape))
+        data = self.img / 255
+        logging.info("Scaled values to 0-1 range".format())
+        data = data.reshape(data.shape[0] * data.shape[1], data.shape[2])
+        logging.info("Reshape to pixel list {}".format(data.shape))
+
+        kmeans = sk.cluster.MiniBatchKMeans(2)
+        kmeans.fit(data)
+        logging.info("Fit {} pixels {} clusters".format(data.shape[0], num_clusters))
+        unique, counts = np.unique(kmeans.labels_, return_counts=True)
+        for c_name, c_count, c_position in zip(unique, counts, kmeans.cluster_centers_):
+            logging.info("\tCluster {} at {} with {:0.1%} of the pixels".format(c_name, np.around(c_position, 3), c_count/data.shape[0])),
+
+        if len(unique) == 2:
+            dist = np.linalg.norm(kmeans.cluster_centers_[0] - kmeans.cluster_centers_[1])
+            logging.debug("Distance between c1 and c2: {}".format(dist))
+        return kmeans
+        # all_new_colors = kmeans.cluster_centers_[kmeans.predict(data)]
+
+def summary_kmeans(kmeans):
+    # all_new_colors = kmeans.cluster_centers_[kmeans.predict(data)]
+
+    all_cluster_labels = kmeans.labels_
+    cluster_counts = np.bincount(all_cluster_labels).tolist()
+    cluster_names = np.unique(all_cluster_labels).tolist()
+    cluster_colors = np.unique(all_new_colors, axis=0)
+
+
+
 #%%
 image_id = df_by_image.index[2] # Select an image with 15 ships
 image = Image(image_id)
 image.load(img_zip, df)
 image.load_ships()
-# print(image)
-# image.get_contours()
 r = image.records
-# r.drop('rotated_rect', axis=1, inplace=True)
-# hash(image.records['EncodedPixels'].values)
 
-print(r.head())
-print(r.columns)
-print(r.index)
-# print(r[:,'rotated_rect'])
-# print(r.loc[r.index[0],'rotated_rect'])
-# type(r.loc[r.index[0],'rotated_rect'])
-# print(r.iloc[0,])
-
-# r.index
-# df.index[#]
-
-image.img
 image.ship_summary_table()
+kmeans = image.k_means()
+
+
 # rotated_rect
 
 # %% Start a fig
