@@ -2,6 +2,8 @@ import dash
 print(dash.__version__)
 import dash_core_components as dcc
 import dash_html_components as dhtml
+import dash_table
+
 
 #%%%%%%%%%%%% LOGGING
 import logging
@@ -155,18 +157,9 @@ r = image.records
 image.ship_summary_table()
 kmeans = image.k_means()
 
+df_ships = image.ship_summary_table()
+
 jpg_data = convert_rgb_img_to_b64string(image.img)
-
-
-# cv2.imencode('.jpg', image.img)[1].tostring('base64')
-# jpg_img.toString('base64')
-# cv2
-# cv2.imwrite(image.image_id, jpg_img)
-# this_image_path = Path(image.image_id)
-# assert this_image_path.exists()
-# logging.info("Saved image to disk: {}".format(this_image_path.absolute()))
-#
-# encoded_image = base64.b64encode()
 
 
 #%%%%%%%%%%%% DASH
@@ -176,33 +169,63 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 app.layout = dhtml.Div(children=[
+
+    # Main title
     dhtml.H1(children='Hello Test1'),
+
+    # Sub-text
     dhtml.Div(children='''
         Dash: Test app number 1 ... !
     '''),
-    dcc.Graph(
-        id='example1',
-        figure={
-            'data': [
-                {'x': [1, 2, 3], 'y': [4, 1, 2], 'type': 'bar', 'name': 'SF'},
-                {'x': [1, 2, 3], 'y': [2, 4, 5], 'type': 'bar', 'name': u'Montréal'},
-            ],
-            'layout': {
-                'title': 'Test title 12'
-            }
-        }
-    ),
+
+    # Test graph
+    # dcc.Graph(
+    #     id='example1',
+    #     figure={
+    #         'data': [
+    #             {'x': [1, 2, 3], 'y': [4, 1, 2], 'type': 'bar', 'name': 'SF'},
+    #             {'x': [1, 2, 3], 'y': [2, 4, 5], 'type': 'bar', 'name': u'Montréal'},
+    #         ],
+    #         'layout': {
+    #             'title': 'Test title 12'
+    #         }
+    #     }
+    # ),
+
+
     dhtml.H1(children="Image {}".format(image.image_id)),
+
+    dhtml.Div([
+        dhtml.Div([
+            dhtml.H3('Ship data'),
+            dash_table.DataTable(
+                id='table',
+                columns=[{"name": i, "id": i} for i in df_ships.columns],
+                data=df_ships.to_dict('records'),
+            ),
+        ], className="six columns"),
+        dhtml.Div([
+            dhtml.H3('Image'),
+            dhtml.Img(src="data:image/png;base64, {}".format(jpg_data))
+        ], className="six columns")
+    ], className="row"),
+
     dhtml.H3(children='TEST H3'),
     dhtml.Div(children=[
         dhtml.H2(children="Image {}".format(image.image_id)),
 
         # dhtml.Img(src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAUA AAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO 9TXL0Y4OHwAAAABJRU5ErkJggg=="),
-        dhtml.Img(src="data:image/png;base64, {}".format(jpg_data))
+
     ])
+
     # dhtml.Div(InteractiveImage('image', 'dash_app.png'), className='six columns'),
 
 ])
+
+app.css.append_css({
+    'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'
+})
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
