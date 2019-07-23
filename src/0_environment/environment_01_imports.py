@@ -11,6 +11,8 @@ import argparse
 import cv2
 import os
 
+import dash
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.image as mplimg
