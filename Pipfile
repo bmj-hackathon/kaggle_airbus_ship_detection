@@ -4,7 +4,7 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [scripts]
-app = "./dash_app/app.py"
+app = "python ./dash_app/app.py"
 
 [dev-packages]
 
