@@ -1,7 +1,7 @@
 import dash
 print(dash.__version__)
 import dash_core_components as dcc
-import dash_html_components as dhtml
+import dash_html_components as html
 import dash_table
 
 
@@ -173,47 +173,87 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-app.layout = dhtml.Div(children=[
+MAX_SHIPS = 15
+
+app.layout = html.Div(children=[
 
     # Main title
-    dhtml.H1(children='Hello Test1'),
+    html.H1(children='Satellite Data visualization'),
+    #Sub-text
+    # dhtml.Div(children='''
+    #     Dash: Test app number 1 ... !
+    # '''),
 
-    # Sub-text
-    dhtml.Div(children='''
-        Dash: Test app number 1 ... !
-    '''),
+    html.Div([
+        html.H2("Ship selection"),
+        html.H4("Select number of ships to filter on:"),
+        dcc.Slider(
+            id='my-slider',
+            min=0,
+            max=15,
+            step=1,
+            value=5,
+            # color="#551A8B",
+            marks={n:'{}'.format(n) for n in range(MAX_SHIPS)},
+        ),
+        html.P("Selected:"),
+        html.Div(id='slider-output-container'),
 
-    dhtml.H1(children="Image {}".format(image.image_id)),
+        html.P("10 images from the filter are randomly selected."),
 
-    dhtml.Div([
-        dhtml.Div([
-            dhtml.H3('Ship data'),
+        html.P("Select the image for analysis below:"),
+
+        dcc.Dropdown(
+            id='my-dropdown',
+            options=[
+                {'label': 'New York City', 'value': 'NYC'},
+                {'label': 'Montreal', 'value': 'MTL'},
+                {'label': 'San Francisco', 'value': 'SF'}
+            ],
+            value='NYC'
+        ),
+        html.Div(id='output-container'),
+
+
+    ], style={'marginBottom': 50, 'marginTop': 25, "background-color":"lightgrey"}),
+
+    html.H1(children="Image {}".format(image.image_id)),
+
+    # 2 columns, data table | base ellipse image
+    html.Div([
+        html.Div([
+            html.H3('Ship data'),
             dash_table.DataTable(
                 id='table',
                 columns=[{"name": i, "id": i} for i in df_ships.columns],
                 data=df_ships.to_dict('records'),
             ),
         ], className="six columns"),
-        dhtml.Div([
-            dhtml.H3('Image'),
-            dhtml.Img(src="data:image/png;base64, {}".format(jpg_base_image))
+        html.Div([
+            html.H3('Image'),
+            html.Img(src="data:image/png;base64, {}".format(jpg_ellipse_image))
         ], className="six columns")
     ], className="row"),
 
-    dhtml.H3(children='TEST H3'),
-    dhtml.div(children=[
-        dhtml.h2(children="image {}".format(image.image_id)),
+    html.H3(children='TEST H3'),
+    html.Div(children=[
+        html.H2(children="image {}".format(image.image_id)),
     ]),
 
-    dhtml.div(children=[
-        dhtml.h2(children="image {}".format(jpg_ellipse_image)),
-    ]),
-    
 ])
 
 app.css.append_css({
     'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'
 })
+
+
+@app.callback(
+    dash.dependencies.Output('slider-output-container', 'children'),
+    [dash.dependencies.Input('my-slider', 'value')])
+
+def update_output(value):
+    images = df_by_image.loc[df_by_image['TotalShips'] == value].index
+    return "{} images have {} ships".format(len(images), value)
 
 
 if __name__ == '__main__':

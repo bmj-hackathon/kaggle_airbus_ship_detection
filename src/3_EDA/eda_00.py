@@ -118,7 +118,7 @@ class Image():
         df_summary.drop(['mask', 'contour', 'moments', 'rotated_rect', 'EncodedPixels'], axis=1, inplace=True)
         df_summary.reset_index(drop=True, inplace=True)
         df_summary.insert(0, 'ship', range(0, len(df_summary)))
-        return df_summary
+        return df_summary.round(1)
 
     def convert_rle_to_mask(self, rle, shape):
         """convert RLE mask into 2d pixel array"""
@@ -197,21 +197,22 @@ def convert_rgb_img_to_b64string(img):
 
     return jpg_as_text
 
+if 0: # DEV
+    image_id = df_by_image.index[2] # Select an image with 15 ships
+    selfimage = Image(image_id)
+    selfimage.load(img_zip, df)
+    selfimage.load_ships()
+    df_summary = selfimage.ship_summary_table()
+    df_summary
+    # for idx,  in selfimage.records.iterrows():
+    #     print(i['contour'])
 
-image_id = df_by_image.index[2] # Select an image with 15 ships
-selfimage = Image(image_id)
-selfimage.load(img_zip, df)
-selfimage.load_ships()
-df_summary = selfimage.ship_summary_table()
-# for idx,  in selfimage.records.iterrows():
-#     print(i['contour'])
+    # i
+    # selfimage.records['contour']
 
-# i
-# selfimage.records['contour']
+    canvas2 = selfimage.draw_ellipses_img()
 
-canvas2 = selfimage.draw_ellipses_img()
+    # for i in
+    #     print(i )
 
-# for i in
-#     print(i )
-
-# r = image.records
+    # r = image.records
