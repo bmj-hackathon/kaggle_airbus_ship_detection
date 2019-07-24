@@ -154,7 +154,7 @@ image.load(img_zip, df)
 image.load_ships()
 
 #%%%%%%%%%%%% Perform kmeans
-kmeans = image.k_means()
+# kmeans = image.k_means()
 
 #%%%%%%%%%%%% Build summary table
 df_ships = image.ship_summary_table()
@@ -210,14 +210,23 @@ app.layout = html.Div(children=[
                 {'label': 'Montreal', 'value': 'MTL'},
                 {'label': 'San Francisco', 'value': 'SF'}
             ],
-            value='NYC'
+            value=image.image_id
         ),
         html.Div(id='output-container'),
+
+        html.Div(id='output-container2'),
 
 
     ], style={'marginBottom': 50, 'marginTop': 25, "background-color":"lightgrey"}),
 
-    html.H1(children="Image {}".format(image.image_id)),
+
+
+
+    # html.H1(children="Image {}".format(image.image_id)),
+    html.H1("Selected image:"),
+    html.H1(id='image_id'),
+
+    # html.H1(children="Image {}".format(image.image_id)),
 
     # 2 columns, data table | base ellipse image
     html.Div([
@@ -246,14 +255,27 @@ app.css.append_css({
     'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'
 })
 
+# TODO: NOTE: The return values are mapped 1:1 in the list of Outputs!
+@app.callback([
+        dash.dependencies.Output('my-dropdown', 'options'),
+        dash.dependencies.Output('slider-output-container', 'children'),
+    ],
+    [dash.dependencies.Input('my-slider', 'value')]
+) # END DECORATOR
+def update_output(value):
+    images = df_by_image.loc[df_by_image['TotalShips'] == value].index.to_series()
+    # dropdown_options = [{'label':id, 'value':id} for id in images.sample(10)]
+    dropdown_options = [{'label':id, 'value':id} for id in images]
+    return dropdown_options, len(images)
+    # return "{} images have {} ships".format(len(images), value)
+
 
 @app.callback(
-    dash.dependencies.Output('slider-output-container', 'children'),
-    [dash.dependencies.Input('my-slider', 'value')])
-
-def update_output(value):
-    images = df_by_image.loc[df_by_image['TotalShips'] == value].index
-    return "{} images have {} ships".format(len(images), value)
+    dash.dependencies.Output('image_id','children'),
+    [dash.dependencies.Input('my-dropdown', 'value')]
+) # END DECORATOR
+def update_image_id(value):
+    return value
 
 
 if __name__ == '__main__':
