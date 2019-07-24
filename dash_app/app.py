@@ -206,23 +206,30 @@ app.layout = html.Div(children=[
             value=5,
             marks={n: '{}'.format(n) for n in range(MAX_SHIPS+1)},
         ),
-        html.P("Selected:"),
-        html.Div(id='slider-output-container'),
+        html.P([
+            html.Span("Found "),
+            html.Span(id='text-ship-count'),
+            html.Span(" images with "),
+            html.Span(id='text-ship-count2'),
+            html.Span(" ships.")
+        ]),
+        # html.P(),
+        # html.Div(,
 
-        html.P("10 images from the filter are randomly selected in the dropdown."),
+        # html.P("10 images from the filter are randomly selected in the dropdown."),
+        #
+        # dcc.Dropdown(
+        #     id='dropdown-ship-id',
+        #     options=[
+        #         {'label': 'New York City', 'value': 'NYC'},
+        #         {'label': 'Montreal', 'value': 'MTL'},
+        #         {'label': 'San Francisco', 'value': 'SF'}
+        #     ],
+        #     value=image.image_id
+        # ),
 
-        dcc.Dropdown(
-            id='dropdown-ship-id',
-            options=[
-                {'label': 'New York City', 'value': 'NYC'},
-                {'label': 'Montreal', 'value': 'MTL'},
-                {'label': 'San Francisco', 'value': 'SF'}
-            ],
-            value=image.image_id
-        ),
-
-        html.P(''),
-        html.P("Alternatively, select an image from the filtered list at random"),
+        # html.P(''),
+        # html.P("Alternatively, select an image from the filtered list at random"),
 
         html.Button('Get random image', id='button-get-random'),
         html.Div(id='container-button-basic',
@@ -270,11 +277,14 @@ app.layout = html.Div(children=[
 #%%-----------------
 # Get the ship number
 #--------------------
+
 # TODO: NOTE: The return values are mapped 1:1 in the list of Outputs!
-@app.callback([
-    dash.dependencies.Output('dropdown-ship-id', 'options'),
-    dash.dependencies.Output('slider-output-container', 'children'),
-],
+@app.callback(
+    # dash.dependencies.Output('dropdown-ship-id', 'options'),
+    [
+    dash.dependencies.Output('text-ship-count', 'children'),
+        dash.dependencies.Output('text-ship-count2', 'children'),
+        ],
     [dash.dependencies.Input('slider-ship-num', 'value')]
 )  # END DECORATOR
 def update_output(value):
@@ -288,7 +298,8 @@ def update_output(value):
     # slider_marks = {img_id : '{}'.format(img_id.split('.')[0]) for i, img_id in enumerate(images_sample)}
     # slider_marks = {n: '{}'.format(n) for n in range(10)}
     # print(slider_marks)
-    return dropdown_options, len(images)
+    # return dropdown_options, len(images)
+    return len(images), value
     # return "{} images have {} ships".format(len(images), value)
 
 
