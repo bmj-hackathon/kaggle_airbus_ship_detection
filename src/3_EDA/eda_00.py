@@ -38,7 +38,18 @@ class Image():
 
     @property
     def num_ships(self):
-        return len(self.records)
+        if len(self.records) == 1:
+            rec = self.records.head(1)
+            # print(rec)
+            # print(rec.columns)
+            # print(rec['EncodedPixels'])
+            # print(rec['EncodedPixels'].values[0])
+            if isinstance(rec['EncodedPixels'].values[0], str):
+                return 1
+            else:
+                return 0
+        else:
+            return len(self.records)
 
     @property
     def shape(self):
@@ -114,12 +125,15 @@ class Image():
         self.records['angle'] = self.records.apply(lambda row: row['rotated_rect'][2], axis=1)
 
     def ship_summary_table(self):
-        df_summary = self.records.copy()
-        df_summary.drop(['mask', 'contour', 'moments', 'rotated_rect', 'EncodedPixels'], axis=1, inplace=True)
-        df_summary.reset_index(drop=True, inplace=True)
-        df_summary.insert(0, 'ship', range(0, len(df_summary)))
-        logging.info("Generating summary table".format())
-        return df_summary.round(1)
+        if self.num_ships:
+            df_summary = self.records.copy()
+            df_summary.drop(['mask', 'contour', 'moments', 'rotated_rect', 'EncodedPixels'], axis=1, inplace=True)
+            df_summary.reset_index(drop=True, inplace=True)
+            df_summary.insert(0, 'ship', range(0, len(df_summary)))
+            logging.info("Generating summary table".format())
+            return df_summary.round(1)
+        else:
+            return None
 
     def convert_rle_to_mask(self, rle, shape):
         """convert RLE mask into 2d pixel array"""
@@ -200,7 +214,9 @@ def convert_rgb_img_to_b64string(img):
 
 if 0: # DEV
     image_id = df_by_image.index[2] # Select an image with 15 ships
+    image_id = df_by_image.index[-2]
     selfimage = Image(image_id)
+    selfimage.records
     selfimage.load(img_zip, df)
     selfimage.load_ships()
     df_summary = selfimage.ship_summary_table()

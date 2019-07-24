@@ -221,7 +221,12 @@ app.layout = html.Div(children=[
             value=image.image_id
         ),
 
+        html.P(''),
+        html.P("Alternatively, select an image from the filtered list at random"),
+
         html.Button('Get random image', id='button-get-random'),
+        html.Div(id='container-button-basic',
+                 children='Enter a value and press submit'),
 
         html.Div(id='output-container'),
 
@@ -299,16 +304,31 @@ if 0:
     def update_image_id_slider(value):
         return value
 
+#%%-----------------
+# Get a random image ID
+#--------------------
+@app.callback(
+    dash.dependencies.Output('image_id', 'children'),
+    [dash.dependencies.Input('button-get-random', 'n_clicks'),
+     dash.dependencies.Input('slider-ship-num', 'value')]
+)  # END DECORATOR
+def button_random(n_clicks, value):
+    images = df_by_image.loc[df_by_image['TotalShips'] == value]
+    selected_id = images.sample().index[0]
+    print("Selected {} from {} images (TotalShips = {})".format(selected_id, len(images), value))
+    return selected_id
+
+
 
 #%%-----------------
 # Get the image ID from the dropdown
 #--------------------
-@app.callback(
-    dash.dependencies.Output('image_id', 'children'),
-    [dash.dependencies.Input('dropdown-ship-id', 'value')]
-)  # END DECORATOR
-def update_image_id_dropdown(value):
-    return value
+# @app.callback(
+#     dash.dependencies.Output('image_id', 'children'),
+#     [dash.dependencies.Input('dropdown-ship-id', 'value')]
+# )  # END DECORATOR
+# def update_image_id_dropdown(value):
+#     return value
 
 #%%-----------------
 # Build the summary table and the image
@@ -327,6 +347,14 @@ def get_image_data(image_id):
     # print("image_id=",image_id)
     image = Image(image_id)
     image.load(img_zip, df)
+    print("GET IMAGE DATA,  num_ships = ", image.num_ships)
+    if not image.num_ships:
+        jpg_ellipse_image = convert_rgb_img_to_b64string(image.img)
+        image_source_string = "data:image/png;base64, {}".format(jpg_ellipse_image)
+        empty_data = [{'ship': 'None', 'index_number': 'n/a', 'x': 'n/a', 'y': 'n/a', 'area': 'n/a', 'angle': 'n/a'}]
+        return empty_data, image_source_string
+
+
     image.load_ships()
 
     # Build summary table
@@ -337,13 +365,12 @@ def get_image_data(image_id):
     jpg_ellipse_image = convert_rgb_img_to_b64string(ndarray_ellipse_image)
     image_source_string = "data:image/png;base64, {}".format(jpg_ellipse_image)
     data = df_ships.to_dict('records')
+    # print(data)
     return data, image_source_string
-
 
 app.css.append_css({
     'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'
 })
-
 
 if __name__ == '__main__':
     app.run_server(debug=True)
