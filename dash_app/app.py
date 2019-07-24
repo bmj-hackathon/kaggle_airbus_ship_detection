@@ -1,13 +1,14 @@
 import dash
+
 print(dash.__version__)
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
 
-
-#%%%%%%%%%%%% LOGGING
+# %%%%%%%%%%%% LOGGING
 import logging
 import sys
+
 logger = logging.getLogger()
 logger.handlers = []
 
@@ -26,7 +27,7 @@ handler.setFormatter(formatter)
 logger.handlers = [handler]
 logging.info("Logging started")
 
-#%%%%%%%%%%%% IMPORTS
+# %%%%%%%%%%%% IMPORTS
 # import the necessary packages
 
 from sklearn.neighbors import KNeighborsClassifier
@@ -52,6 +53,7 @@ import sklearn as sk
 import sklearn.cluster
 
 import seaborn as sns
+
 sns.set()
 
 import random
@@ -59,8 +61,9 @@ import pandas as pd
 from pathlib import Path
 import zipfile
 
-#%%%%%%%%%%%% CLASSES
-#%%
+
+# %%%%%%%%%%%% CLASSES
+# %%
 def plot_hist(img, ax):
     color = ('r', 'g', 'b')
     for i, col in enumerate(color):
@@ -70,11 +73,13 @@ def plot_hist(img, ax):
     # ax.get_xaxis().set_visible(False)
     # ax.get_yaxis().set_visible(False)
 
-#%% Get all masks given an image ID
+
+# %% Get all masks given an image ID
 
 def get_ellipsed_images(image_id):
     img = imutils.load_rgb_from_zip(img_zip, image_id)
-    logging.info("Loaded {}, size {} with {} ships".format(image_id, img.shape, df_by_image.loc[image_id]['TotalShips']))
+    logging.info(
+        "Loaded {}, size {} with {} ships".format(image_id, img.shape, df_by_image.loc[image_id]['TotalShips']))
 
     records = df.loc[image_id]
 
@@ -87,9 +92,9 @@ def get_ellipsed_images(image_id):
 
     # Iterate over each record
     contours = list()
-    cnt=0
+    cnt = 0
     for i, rec in records.iterrows():
-        cnt+=1
+        cnt += 1
         logging.debug("Processing record {} of {}".format(cnt, image_id))
         mask = imutils.convert_rle_mask(rec['EncodedPixels'])
         contour = imutils.get_contour(mask)
@@ -99,8 +104,8 @@ def get_ellipsed_images(image_id):
     return img, contours
 
 
-#%%%%%%%%%%%% LOAD
-#%%
+# %%%%%%%%%%%% LOAD
+# %%
 # data_path = Path("/media/batman/f4023177-48c1-456b-bff2-cc769f3ac277/ASSETS/Dogs vs Cats")
 # image_path = data_path / '12499.jpg'
 # image_path = data_path / '12500.jpg'
@@ -113,9 +118,10 @@ assert record_path.exists()
 
 img_zip = zipfile.ZipFile(img_zip_path)
 
-logging.info("Image data: '{}' loaded from {} with {} files".format('img_zip', img_zip_path.name, len(img_zip.filelist) ))
+logging.info(
+    "Image data: '{}' loaded from {} with {} files".format('img_zip', img_zip_path.name, len(img_zip.filelist)))
 
-#%%
+# %%
 df = pd.read_csv(record_path)
 
 logging.info("{} with {} records".format(record_path.name, len(df)))
@@ -124,7 +130,7 @@ logging.info("{} unique file names found in df".format(df['ImageId'].unique().sh
 df['HasShip'] = df['EncodedPixels'].notnull()
 # Flag if the record is NOT unique
 df['Duplicated'] = df['ImageId'].duplicated()
-df['Unique'] = df['Duplicated']==False
+df['Unique'] = df['Duplicated'] == False
 
 logging.info("{} records with mask information (ship)".format(df['HasShip'].value_counts()[True]))
 logging.info("{} images have at least one ship".format(sum(df['HasShip'] & df['Unique'])))
@@ -135,39 +141,37 @@ df_by_image.sort_values('TotalShips', ascending=False, inplace=True)
 df = df.set_index('ImageId')
 df_sample = df.head()
 
-
-#%%%%%%%%%%%% LOAD IMAGE CLASS
+# %%%%%%%%%%%% LOAD IMAGE CLASS
 
 # TODO: This is just a patch for now, local dev!
 import sys
+
 path_image_class = Path().cwd() / 'src' / '3_EDA'
 path_image_class = path_image_class.resolve()
 sys.path.append(str(path_image_class.absolute()))
 print(sys.path)
 from eda_00 import Image, convert_rgb_img_to_b64string
 
-
-#%%%%%%%%%%%% LOAD 1 IMAGE INSTANCE
-image_id = df_by_image.index[2] # Select an image with 15 ships
+# %%%%%%%%%%%% LOAD 1 IMAGE INSTANCE
+image_id = df_by_image.index[2]  # Select an image with 15 ships
 image = Image(image_id)
 image.load(img_zip, df)
 image.load_ships()
 
-#%%%%%%%%%%%% Perform kmeans
+# %%%%%%%%%%%% Perform kmeans
 # kmeans = image.k_means()
 
-#%%%%%%%%%%%% Build summary table
+# %%%%%%%%%%%% Build summary table
 df_ships = image.ship_summary_table()
 
-#%%%%%%%%%%%% Get base image
+# %%%%%%%%%%%% Get base image
 jpg_base_image = convert_rgb_img_to_b64string(image.img)
 
-#%%%%%%%%%%%% Get ellipse image
+# %%%%%%%%%%%% Get ellipse image
 ndarray_ellipse_image = image.draw_ellipses_img()
 jpg_ellipse_image = convert_rgb_img_to_b64string(ndarray_ellipse_image)
 
-
-#%%%%%%%%%%%% DASH
+# %%%%%%%%%%%% DASH
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -179,7 +183,7 @@ app.layout = html.Div(children=[
 
     # Main title
     html.H1(children='Satellite Data visualization'),
-    #Sub-text
+    # Sub-text
     # dhtml.Div(children='''
     #     Dash: Test app number 1 ... !
     # '''),
@@ -194,7 +198,7 @@ app.layout = html.Div(children=[
             step=1,
             value=5,
             # color="#551A8B",
-            marks={n:'{}'.format(n) for n in range(MAX_SHIPS)},
+            marks={n: '{}'.format(n) for n in range(MAX_SHIPS)},
         ),
         html.P("Selected:"),
         html.Div(id='slider-output-container'),
@@ -216,22 +220,39 @@ app.layout = html.Div(children=[
 
         html.Div(id='output-container2'),
 
-
-    ], style={'marginBottom': 50, 'marginTop': 25, "background-color":"lightgrey"}),
-
-
-
+    ], className="section-container"),
 
     # html.H1(children="Image {}".format(image.image_id)),
     html.H1("Selected image:"),
     html.H1(id='image_id'),
+    html.H3(id='start-status'),
+
+    # 2 columns, data table | base ellipse image
+    html.Div([
+        html.Div([
+            html.H3('Ship data'),
+            dash_table.DataTable(
+                id='ship-data-table',
+                columns=[{"name": i, "id": i} for i in df_ships.columns],
+            ),
+        ], className="six columns"),
+        html.Div([
+            html.H3('Image'),
+            html.Img(id='base-ship-image')
+        ], className="six columns")
+    ], className="row"),
+
+    html.H3(children='TEST H3'),
+    html.Div(children=[
+        html.H2(children="image {}".format(image.image_id)),
+    ]),
 
     # html.H1(children="Image {}".format(image.image_id)),
 
     # 2 columns, data table | base ellipse image
     html.Div([
         html.Div([
-            html.H3('Ship data'),
+            html.H3('Ship data OLD'),
             dash_table.DataTable(
                 id='table',
                 columns=[{"name": i, "id": i} for i in df_ships.columns],
@@ -255,29 +276,53 @@ app.css.append_css({
     'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'
 })
 
+
 # TODO: NOTE: The return values are mapped 1:1 in the list of Outputs!
 @app.callback([
-        dash.dependencies.Output('my-dropdown', 'options'),
-        dash.dependencies.Output('slider-output-container', 'children'),
-    ],
+    dash.dependencies.Output('my-dropdown', 'options'),
+    dash.dependencies.Output('slider-output-container', 'children'),
+],
     [dash.dependencies.Input('my-slider', 'value')]
-) # END DECORATOR
+)  # END DECORATOR
 def update_output(value):
     images = df_by_image.loc[df_by_image['TotalShips'] == value].index.to_series()
     # dropdown_options = [{'label':id, 'value':id} for id in images.sample(10)]
-    dropdown_options = [{'label':id, 'value':id} for id in images]
+    dropdown_options = [{'label': id, 'value': id} for id in images]
     return dropdown_options, len(images)
     # return "{} images have {} ships".format(len(images), value)
 
 
 @app.callback(
-    dash.dependencies.Output('image_id','children'),
+    dash.dependencies.Output('image_id', 'children'),
     [dash.dependencies.Input('my-dropdown', 'value')]
-) # END DECORATOR
+)  # END DECORATOR
 def update_image_id(value):
     return value
 
 
+@app.callback(
+    [
+        dash.dependencies.Output('ship-data-table', 'data'),
+        dash.dependencies.Output('base-ship-image', 'src'),
+    ],
+    [dash.dependencies.Input('image_id', 'children')]
+)
+def get_image_data(image_id):
+    # Instantiate the image object
+    image = Image(image_id)
+    image.load(img_zip, df)
+    image.load_ships()
+
+    # Build summary table
+    df_ships = image.ship_summary_table()
+
+    # Get ellipse image
+    ndarray_ellipse_image = image.draw_ellipses_img()
+    jpg_ellipse_image = convert_rgb_img_to_b64string(ndarray_ellipse_image)
+    image_source_string = "data:image/png;base64, {}".format(jpg_ellipse_image)
+    data = df_ships.to_dict('records')
+    return data, image_source_string
+
+
 if __name__ == '__main__':
     app.run_server(debug=True)
-

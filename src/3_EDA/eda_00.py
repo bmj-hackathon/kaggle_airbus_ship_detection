@@ -118,6 +118,7 @@ class Image():
         df_summary.drop(['mask', 'contour', 'moments', 'rotated_rect', 'EncodedPixels'], axis=1, inplace=True)
         df_summary.reset_index(drop=True, inplace=True)
         df_summary.insert(0, 'ship', range(0, len(df_summary)))
+        logging.info("Generating summary table".format())
         return df_summary.round(1)
 
     def convert_rle_to_mask(self, rle, shape):
@@ -149,6 +150,7 @@ class Image():
         return contour
 
     def draw_ellipses_img(self):
+        logging.info("Fitting and drawing ellipses on a new ndarray canvas.".format())
         canvas = self.img
         for idx, rec in self.records.iterrows():
             # logging.debug("Processing record {} of {}".format(cnt, image_id))
@@ -157,7 +159,6 @@ class Image():
             # print(rec)
             # print(rec['contour'])
             canvas = imutils.fit_draw_ellipse(canvas, rec['contour'], thickness=2)
-        logging.info("Fit and draw ellipses on a new ndarray canvas.".format())
         return canvas
 
     def k_means(self, num_clusters=2):
