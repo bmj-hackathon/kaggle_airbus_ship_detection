@@ -173,11 +173,11 @@ jpg_ellipse_image = convert_rgb_img_to_b64string(ndarray_ellipse_image)
 
 # %%%%%%%%%%%% DASH
 
-# external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 # app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 assets_url_path = Path.cwd() / 'dash_app' / 'assets'
 assert assets_url_path.exists()
-app = dash.Dash(__name__, assets_url_path=str( assets_url_path ))
+app = dash.Dash(__name__, assets_url_path=str(assets_url_path), external_stylesheets=external_stylesheets)
 
 MAX_SHIPS = 15
 
@@ -195,12 +195,13 @@ app.layout = html.Div(children=[
         html.H4("Select number of ships to filter on:"),
         dcc.Slider(
             id='my-slider',
+            className='slider',
             min=0,
             max=15,
             step=1,
             value=5,
             # color="#551A8B",
-            marks={n: '{}'.format(n) for n in range(MAX_SHIPS)},
+            marks={n: '{}'.format(n) for n in range(MAX_SHIPS+1)},
         ),
         html.P("Selected:"),
         html.Div(id='slider-output-container'),
@@ -208,6 +209,18 @@ app.layout = html.Div(children=[
         html.P("10 images from the filter are randomly selected."),
 
         html.P("Select the image for analysis below:"),
+
+        dcc.Slider(
+            id='slider-ship-id',
+            className='slider',
+            min=0,
+            max=15,
+            step=1,
+            value=5,
+            # color="#551A8B",
+            marks={n: '{}'.format(n) for n in range(MAX_SHIPS + 1)},
+        ),
+
 
         dcc.Dropdown(
             id='my-dropdown',
@@ -278,7 +291,6 @@ app.css.append_css({
     'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'
 })
 
-
 # TODO: NOTE: The return values are mapped 1:1 in the list of Outputs!
 @app.callback([
     dash.dependencies.Output('my-dropdown', 'options'),
@@ -289,7 +301,7 @@ app.css.append_css({
 def update_output(value):
     images = df_by_image.loc[df_by_image['TotalShips'] == value].index.to_series()
     # dropdown_options = [{'label':id, 'value':id} for id in images.sample(10)]
-    dropdown_options = [{'label': id, 'value': id} for id in images]
+    dropdown_options = [{'label': id, 'value': id} for id in images.sample(10)]
     return dropdown_options, len(images)
     # return "{} images have {} ships".format(len(images), value)
 

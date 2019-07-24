@@ -1,0 +1,20 @@
+rc-slider-step {
+    color: black;
+}
+
+div.slider {
+    margin: 20px 20px 20px 20px;
+    width: 80%;
+}
+
+rc-slider-mark-text {
+    color: black;
+}
+
+div.rc-slider-track {
+    background-color: black;
+}
+
+/*.rc-slider-track {*/
+/*    background-color: black;*/
+/*}*/
