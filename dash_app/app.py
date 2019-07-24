@@ -152,14 +152,19 @@ image_id = df_by_image.index[2] # Select an image with 15 ships
 image = Image(image_id)
 image.load(img_zip, df)
 image.load_ships()
-r = image.records
 
-image.ship_summary_table()
+#%%%%%%%%%%%% Perform kmeans
 kmeans = image.k_means()
 
+#%%%%%%%%%%%% Build summary table
 df_ships = image.ship_summary_table()
 
-jpg_data = convert_rgb_img_to_b64string(image.img)
+#%%%%%%%%%%%% Get base image
+jpg_base_image = convert_rgb_img_to_b64string(image.img)
+
+#%%%%%%%%%%%% Get ellipse image
+ndarray_ellipse_image = image.draw_ellipses_img()
+jpg_ellipse_image = convert_rgb_img_to_b64string(ndarray_ellipse_image)
 
 
 #%%%%%%%%%%%% DASH
@@ -191,14 +196,19 @@ app.layout = dhtml.Div(children=[
         ], className="six columns"),
         dhtml.Div([
             dhtml.H3('Image'),
-            dhtml.Img(src="data:image/png;base64, {}".format(jpg_data))
+            dhtml.Img(src="data:image/png;base64, {}".format(jpg_base_image))
         ], className="six columns")
     ], className="row"),
 
     dhtml.H3(children='TEST H3'),
-    dhtml.Div(children=[
-        dhtml.H2(children="Image {}".format(image.image_id)),
-    ])
+    dhtml.div(children=[
+        dhtml.h2(children="image {}".format(image.image_id)),
+    ]),
+
+    dhtml.div(children=[
+        dhtml.h2(children="image {}".format(jpg_ellipse_image)),
+    ]),
+    
 ])
 
 app.css.append_css({

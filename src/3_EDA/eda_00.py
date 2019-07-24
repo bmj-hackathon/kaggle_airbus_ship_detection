@@ -116,10 +116,9 @@ class Image():
     def ship_summary_table(self):
         df_summary = self.records.copy()
         df_summary.drop(['mask', 'contour', 'moments', 'rotated_rect', 'EncodedPixels'], axis=1, inplace=True)
+        df_summary.reset_index(drop=True, inplace=True)
+        df_summary.insert(0, 'ship', range(0, len(df_summary)))
         return df_summary
-
-    def draw_ellipses_to_canvas(self):
-        img = imutils.fit_draw_ellipse(self.img, contour, thickness=2)
 
     def convert_rle_to_mask(self, rle, shape):
         """convert RLE mask into 2d pixel array"""
@@ -150,15 +149,16 @@ class Image():
         return contour
 
     def draw_ellipses_img(self):
-        for i, rec in records.iterrows():
-            cnt += 1
-            logging.debug("Processing record {} of {}".format(cnt, image_id))
-            mask = imutils.convert_rle_mask(rec['EncodedPixels'])
-            contour = imutils.get_contour(mask)
-            contours.append(contour)
+        canvas = self.img
+        for idx, rec in self.records.iterrows():
+            # logging.debug("Processing record {} of {}".format(cnt, image_id))
+            # contour = imutils.get_contour(rec['mask'])
             # img = imutils.draw_ellipse_and_axis(img, contour, thickness=2)
-            img = imutils.fit_draw_ellipse(img, contour, thickness=2)
-        return img, contours
+            # print(rec)
+            # print(rec['contour'])
+            canvas = imutils.fit_draw_ellipse(canvas, rec['contour'], thickness=2)
+        logging.info("Fit and draw ellipses on a new ndarray canvas.".format())
+        return canvas
 
     def k_means(self, num_clusters=2):
         logging.info("Processing {} image of shape {}".format(self.encoding, self.img.shape))
@@ -202,4 +202,16 @@ image_id = df_by_image.index[2] # Select an image with 15 ships
 selfimage = Image(image_id)
 selfimage.load(img_zip, df)
 selfimage.load_ships()
+df_summary = selfimage.ship_summary_table()
+# for idx,  in selfimage.records.iterrows():
+#     print(i['contour'])
+
+# i
+# selfimage.records['contour']
+
+canvas2 = selfimage.draw_ellipses_img()
+
+# for i in
+#     print(i )
+
 # r = image.records
