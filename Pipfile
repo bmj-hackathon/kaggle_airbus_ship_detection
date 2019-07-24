@@ -39,6 +39,7 @@ tensorflow-gpu = "*"
 pillow = "*"
 imutils = {editable = true,path = "/home/batman/kaggle/imutils"}
 dash = "*"
+dash-daq = "*"
 
 [requires]
 python_version = "3.6"

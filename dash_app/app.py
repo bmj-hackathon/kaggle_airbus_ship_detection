@@ -3,6 +3,7 @@ import dash
 print(dash.__version__)
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_daq as daq
 import dash_table
 
 # %%%%%%%%%%%% LOGGING
@@ -194,13 +195,12 @@ app.layout = html.Div(children=[
         html.H2("Ship selection"),
         html.H4("Select number of ships to filter on:"),
         dcc.Slider(
-            id='my-slider',
+            id='slider-ship-num',
             className='slider',
             min=0,
             max=15,
             step=1,
             value=5,
-            # color="#551A8B",
             marks={n: '{}'.format(n) for n in range(MAX_SHIPS+1)},
         ),
         html.P("Selected:"),
@@ -213,24 +213,22 @@ app.layout = html.Div(children=[
         dcc.Slider(
             id='slider-ship-id',
             className='slider',
-            min=0,
-            max=15,
+            min=1,
+            max=10,
             step=1,
-            value=5,
-            # color="#551A8B",
-            marks={n: '{}'.format(n) for n in range(MAX_SHIPS + 1)},
+            # value=1,
+            # marks={n: '{}'.format(n) for n in range(10)},
         ),
 
-
-        dcc.Dropdown(
-            id='my-dropdown',
-            options=[
-                {'label': 'New York City', 'value': 'NYC'},
-                {'label': 'Montreal', 'value': 'MTL'},
-                {'label': 'San Francisco', 'value': 'SF'}
-            ],
-            value=image.image_id
-        ),
+        # dcc.Dropdown(
+        #     id='my-dropdown',
+        #     options=[
+        #         {'label': 'New York City', 'value': 'NYC'},
+        #         {'label': 'Montreal', 'value': 'MTL'},
+        #         {'label': 'San Francisco', 'value': 'SF'}
+        #     ],
+        #     value=image.image_id
+        # ),
         html.Div(id='output-container'),
 
         html.Div(id='output-container2'),
@@ -291,29 +289,46 @@ app.css.append_css({
     'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'
 })
 
+
+#%%-----------------
+# Get the ship number
+#--------------------
 # TODO: NOTE: The return values are mapped 1:1 in the list of Outputs!
 @app.callback([
-    dash.dependencies.Output('my-dropdown', 'options'),
+    dash.dependencies.Output('slider-ship-id', 'marks'),
     dash.dependencies.Output('slider-output-container', 'children'),
 ],
-    [dash.dependencies.Input('my-slider', 'value')]
+    [dash.dependencies.Input('slider-ship-num', 'value')]
 )  # END DECORATOR
 def update_output(value):
     images = df_by_image.loc[df_by_image['TotalShips'] == value].index.to_series()
+    images_sample = images.sample(10)
+
     # dropdown_options = [{'label':id, 'value':id} for id in images.sample(10)]
-    dropdown_options = [{'label': id, 'value': id} for id in images.sample(10)]
-    return dropdown_options, len(images)
+    # dropdown_options = [{'label': id, 'value': id} for id in images.sample(10)]
+
+    slider_marks = {i+1 : '{}'.format(img_id.split('.')[0]) for i, img_id in enumerate(images_sample)}
+    slider_marks = {img_id : '{}'.format(img_id.split('.')[0]) for i, img_id in enumerate(images_sample)}
+    # slider_marks = {n: '{}'.format(n) for n in range(10)}
+    print(slider_marks)
+    return slider_marks, images_sample[0], len(images)
     # return "{} images have {} ships".format(len(images), value)
 
 
+#%%-----------------
+# Get the image ID from the slider
+#--------------------
 @app.callback(
     dash.dependencies.Output('image_id', 'children'),
-    [dash.dependencies.Input('my-dropdown', 'value')]
+    [dash.dependencies.Input('slider-ship-id', 'value')]
 )  # END DECORATOR
 def update_image_id(value):
     return value
 
 
+#%%-----------------
+# Build the summary table and the image
+#--------------------
 @app.callback(
     [
         dash.dependencies.Output('ship-data-table', 'data'),
@@ -321,8 +336,11 @@ def update_image_id(value):
     ],
     [dash.dependencies.Input('image_id', 'children')]
 )
-def get_image_data(image_id):
+def get_image_data(image_id_index_number):
     # Instantiate the image object
+    print("Getting image number {}".format(image_id_index_number))
+    image_id = df.iloc[image_id_index_number, :].index
+    print("image_id=",image_id)
     image = Image(image_id)
     image.load(img_zip, df)
     image.load_ships()

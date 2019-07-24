@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "7acc95cdcbdffc469fef6f3cd1b9518b78b65b4eff10194324a25fae8862a1ea"
+            "sha256": "730055c67a06de4b40fc79ad74d5804041c94c84ba2bda318eb65ab31f53b02a"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -69,6 +69,13 @@
                 "sha256:265477e87f665cef611059446d5f8768eedbe7e077ce80750dde1f3715f64ba2"
             ],
             "version": "==1.0.0"
+        },
+        "dash-daq": {
+            "hashes": [
+                "sha256:659f3fb316bb24cc344e8d09ea432dfd113dd2cfbe56d6a24ecac797b02ac70a"
+            ],
+            "index": "pypi",
+            "version": "==0.1.7"
         },
         "dash-html-components": {
             "hashes": [
@@ -592,10 +599,10 @@
         },
         "pyparsing": {
             "hashes": [
-                "sha256:530d8bf8cc93a34019d08142593cf4d78a05c890da8cf87ffa3120af53772238",
-                "sha256:f78e99616b6f1a4745c0580e170251ef1bbafc0d0513e270c4bd281bf29d2800"
+                "sha256:1873c03321fc118f4e9746baf201ff990ceb915f433f23b395f5580d1840cb2a",
+                "sha256:9b6323ef4ab914af344ba97510e966d64ba91055d6b9afa6b30799340e89cc03"
             ],
-            "version": "==2.4.1"
+            "version": "==2.4.0"
         },
         "pyrsistent": {
             "hashes": [
