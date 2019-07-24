@@ -140,6 +140,7 @@ df_by_image = df.groupby('ImageId').agg({'HasShip': ['first', 'sum']})
 df_by_image.columns = ['HasShip', 'TotalShips']
 df_by_image.sort_values('TotalShips', ascending=False, inplace=True)
 df = df.set_index('ImageId')
+df['index_number'] = range(0, len(df))
 df_sample = df.head()
 
 # %%%%%%%%%%%% LOAD IMAGE CLASS
@@ -182,6 +183,8 @@ app = dash.Dash(__name__, assets_url_path=str(assets_url_path), external_stylesh
 
 MAX_SHIPS = 15
 
+
+
 app.layout = html.Div(children=[
 
     # Main title
@@ -206,29 +209,20 @@ app.layout = html.Div(children=[
         html.P("Selected:"),
         html.Div(id='slider-output-container'),
 
-        html.P("10 images from the filter are randomly selected."),
+        html.P("10 images from the filter are randomly selected in the dropdown."),
 
-        html.P("Select the image for analysis below:"),
-
-        dcc.Slider(
-            id='slider-ship-id',
-            className='slider',
-            min=1,
-            max=10,
-            step=1,
-            # value=1,
-            # marks={n: '{}'.format(n) for n in range(10)},
+        dcc.Dropdown(
+            id='dropdown-ship-id',
+            options=[
+                {'label': 'New York City', 'value': 'NYC'},
+                {'label': 'Montreal', 'value': 'MTL'},
+                {'label': 'San Francisco', 'value': 'SF'}
+            ],
+            value=image.image_id
         ),
 
-        # dcc.Dropdown(
-        #     id='my-dropdown',
-        #     options=[
-        #         {'label': 'New York City', 'value': 'NYC'},
-        #         {'label': 'Montreal', 'value': 'MTL'},
-        #         {'label': 'San Francisco', 'value': 'SF'}
-        #     ],
-        #     value=image.image_id
-        # ),
+        html.Button('Get random image', id='button-get-random'),
+
         html.Div(id='output-container'),
 
         html.Div(id='output-container2'),
@@ -262,6 +256,104 @@ app.layout = html.Div(children=[
 
     # html.H1(children="Image {}".format(image.image_id)),
 
+
+])
+
+
+
+
+#%%-----------------
+# Get the ship number
+#--------------------
+# TODO: NOTE: The return values are mapped 1:1 in the list of Outputs!
+@app.callback([
+    dash.dependencies.Output('dropdown-ship-id', 'options'),
+    dash.dependencies.Output('slider-output-container', 'children'),
+],
+    [dash.dependencies.Input('slider-ship-num', 'value')]
+)  # END DECORATOR
+def update_output(value):
+    images = df_by_image.loc[df_by_image['TotalShips'] == value].index.to_series()
+    images_sample = images.sample(10)
+
+    dropdown_options = [{'label':id, 'value':id} for id in images_sample]
+    # dropdown_options = [{'label': id, 'value': id} for id in images.sample(10)]
+
+    # slider_marks = {i+1 : '{}'.format(img_id.split('.')[0]) for i, img_id in enumerate(images_sample)}
+    # slider_marks = {img_id : '{}'.format(img_id.split('.')[0]) for i, img_id in enumerate(images_sample)}
+    # slider_marks = {n: '{}'.format(n) for n in range(10)}
+    # print(slider_marks)
+    return dropdown_options, len(images)
+    # return "{} images have {} ships".format(len(images), value)
+
+
+#%%-----------------
+# Get the image ID from the slider
+# BROKEN
+#--------------------
+if 0:
+    @app.callback(
+        dash.dependencies.Output('image_id', 'children'),
+        [dash.dependencies.Input('slider-ship-id', 'value')]
+    )  # END DECORATOR
+    def update_image_id_slider(value):
+        return value
+
+
+#%%-----------------
+# Get the image ID from the dropdown
+#--------------------
+@app.callback(
+    dash.dependencies.Output('image_id', 'children'),
+    [dash.dependencies.Input('dropdown-ship-id', 'value')]
+)  # END DECORATOR
+def update_image_id_dropdown(value):
+    return value
+
+#%%-----------------
+# Build the summary table and the image
+#--------------------
+@app.callback(
+    [
+        dash.dependencies.Output('ship-data-table', 'data'),
+        dash.dependencies.Output('base-ship-image', 'src'),
+    ],
+    [dash.dependencies.Input('image_id', 'children')]
+)
+def get_image_data(image_id):
+    # Instantiate the image object
+    # print("Getting image number {}".format(image_id_index_number))
+    # image_id = df.iloc[image_id_index_number, :].index
+    # print("image_id=",image_id)
+    image = Image(image_id)
+    image.load(img_zip, df)
+    image.load_ships()
+
+    # Build summary table
+    df_ships = image.ship_summary_table()
+
+    # Get ellipse image
+    ndarray_ellipse_image = image.draw_ellipses_img()
+    jpg_ellipse_image = convert_rgb_img_to_b64string(ndarray_ellipse_image)
+    image_source_string = "data:image/png;base64, {}".format(jpg_ellipse_image)
+    data = df_ships.to_dict('records')
+    return data, image_source_string
+
+
+app.css.append_css({
+    'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'
+})
+
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
+
+
+
+
+
+
+def gen_2_cols_OBSELETE():
     # 2 columns, data table | base ellipse image
     html.Div([
         html.Div([
@@ -283,78 +375,13 @@ app.layout = html.Div(children=[
         html.H2(children="image {}".format(image.image_id)),
     ]),
 
-])
-
-app.css.append_css({
-    'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'
-})
-
-
-#%%-----------------
-# Get the ship number
-#--------------------
-# TODO: NOTE: The return values are mapped 1:1 in the list of Outputs!
-@app.callback([
-    dash.dependencies.Output('slider-ship-id', 'marks'),
-    dash.dependencies.Output('slider-output-container', 'children'),
-],
-    [dash.dependencies.Input('slider-ship-num', 'value')]
-)  # END DECORATOR
-def update_output(value):
-    images = df_by_image.loc[df_by_image['TotalShips'] == value].index.to_series()
-    images_sample = images.sample(10)
-
-    # dropdown_options = [{'label':id, 'value':id} for id in images.sample(10)]
-    # dropdown_options = [{'label': id, 'value': id} for id in images.sample(10)]
-
-    slider_marks = {i+1 : '{}'.format(img_id.split('.')[0]) for i, img_id in enumerate(images_sample)}
-    slider_marks = {img_id : '{}'.format(img_id.split('.')[0]) for i, img_id in enumerate(images_sample)}
-    # slider_marks = {n: '{}'.format(n) for n in range(10)}
-    print(slider_marks)
-    return slider_marks, images_sample[0], len(images)
-    # return "{} images have {} ships".format(len(images), value)
-
-
-#%%-----------------
-# Get the image ID from the slider
-#--------------------
-@app.callback(
-    dash.dependencies.Output('image_id', 'children'),
-    [dash.dependencies.Input('slider-ship-id', 'value')]
-)  # END DECORATOR
-def update_image_id(value):
-    return value
-
-
-#%%-----------------
-# Build the summary table and the image
-#--------------------
-@app.callback(
-    [
-        dash.dependencies.Output('ship-data-table', 'data'),
-        dash.dependencies.Output('base-ship-image', 'src'),
-    ],
-    [dash.dependencies.Input('image_id', 'children')]
-)
-def get_image_data(image_id_index_number):
-    # Instantiate the image object
-    print("Getting image number {}".format(image_id_index_number))
-    image_id = df.iloc[image_id_index_number, :].index
-    print("image_id=",image_id)
-    image = Image(image_id)
-    image.load(img_zip, df)
-    image.load_ships()
-
-    # Build summary table
-    df_ships = image.ship_summary_table()
-
-    # Get ellipse image
-    ndarray_ellipse_image = image.draw_ellipses_img()
-    jpg_ellipse_image = convert_rgb_img_to_b64string(ndarray_ellipse_image)
-    image_source_string = "data:image/png;base64, {}".format(jpg_ellipse_image)
-    data = df_ships.to_dict('records')
-    return data, image_source_string
-
-
-if __name__ == '__main__':
-    app.run_server(debug=True)
+def gen_slider_OBSELETE():
+    return dcc.Slider(
+        id='slider-ship-id',
+        className='slider',
+        min=1,
+        max=10,
+        step=1,
+        # value=1,
+        # marks={n: '{}'.format(n) for n in range(10)},
+    )
