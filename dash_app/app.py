@@ -140,7 +140,7 @@ df_sample = df.head()
 
 # TODO: This is just a patch for now, local dev!
 import sys
-path_image_class = Path().cwd() / '..' / 'src' / '3_EDA'
+path_image_class = Path().cwd() / 'src' / '3_EDA'
 path_image_class = path_image_class.resolve()
 sys.path.append(str(path_image_class.absolute()))
 print(sys.path)
@@ -178,21 +178,6 @@ app.layout = dhtml.Div(children=[
         Dash: Test app number 1 ... !
     '''),
 
-    # Test graph
-    # dcc.Graph(
-    #     id='example1',
-    #     figure={
-    #         'data': [
-    #             {'x': [1, 2, 3], 'y': [4, 1, 2], 'type': 'bar', 'name': 'SF'},
-    #             {'x': [1, 2, 3], 'y': [2, 4, 5], 'type': 'bar', 'name': u'Montréal'},
-    #         ],
-    #         'layout': {
-    #             'title': 'Test title 12'
-    #         }
-    #     }
-    # ),
-
-
     dhtml.H1(children="Image {}".format(image.image_id)),
 
     dhtml.Div([
@@ -213,13 +198,7 @@ app.layout = dhtml.Div(children=[
     dhtml.H3(children='TEST H3'),
     dhtml.Div(children=[
         dhtml.H2(children="Image {}".format(image.image_id)),
-
-        # dhtml.Img(src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAUA AAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO 9TXL0Y4OHwAAAABJRU5ErkJggg=="),
-
     ])
-
-    # dhtml.Div(InteractiveImage('image', 'dash_app.png'), className='six columns'),
-
 ])
 
 app.css.append_css({

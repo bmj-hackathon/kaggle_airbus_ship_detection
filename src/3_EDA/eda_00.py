@@ -63,10 +63,10 @@ class Image():
         self.encoding = 'RGB'
         logging.info("Loaded {}, size {} ".format(self.image_id, self.img.shape))
 
-        self.records = df[df.index == self.image_id]
+        # TODO: (Actually just a note: the .copy() will suppress the SettingWithCopyWarning!
+        self.records = df.loc[df.index == self.image_id, :].copy()
         assert isinstance(self.records, pd.DataFrame)
 
-        # TODO: check warning
         self.records['ship_id'] = self.records.apply(lambda row: hash(row['EncodedPixels']), axis=1)
         self.records.set_index('ship_id', inplace=True)
         self.records.drop(['HasShip', 'Duplicated', 'Unique'], axis=1, inplace=True)
@@ -112,17 +112,11 @@ class Image():
         self.records['area'] = self.records.apply(lambda row: cv2.contourArea(row['contour']), axis=1)
         self.records['rotated_rect'] = self.records.apply(lambda row: cv2.minAreaRect(row['contour']), axis=1)
         self.records['angle'] = self.records.apply(lambda row: row['rotated_rect'][2], axis=1)
-        # print(self.records['rotated_rect'])
-        # print(type(self.records['rotated_rect'].iloc[0]))
-
-
-        # self.records['area'] = int()
-        # self.records['rotated_rect'] = cv2.fitEllipse(c)
-
-        self.records.drop(['mask', 'contour', 'moments', 'rotated_rect', 'EncodedPixels'], axis=1, inplace=True)
 
     def ship_summary_table(self):
-        return self.records.round(1)
+        df_summary = self.records.copy()
+        df_summary.drop(['mask', 'contour', 'moments', 'rotated_rect', 'EncodedPixels'], axis=1, inplace=True)
+        return df_summary
 
     def draw_ellipses_to_canvas(self):
         img = imutils.fit_draw_ellipse(self.img, contour, thickness=2)
@@ -154,6 +148,17 @@ class Image():
         contour = contours[0]
         # logging.debug("Returning {} fit contours over mask pixels".format(len(contours)))
         return contour
+
+    def draw_ellipses_img(self):
+        for i, rec in records.iterrows():
+            cnt += 1
+            logging.debug("Processing record {} of {}".format(cnt, image_id))
+            mask = imutils.convert_rle_mask(rec['EncodedPixels'])
+            contour = imutils.get_contour(mask)
+            contours.append(contour)
+            # img = imutils.draw_ellipse_and_axis(img, contour, thickness=2)
+            img = imutils.fit_draw_ellipse(img, contour, thickness=2)
+        return img, contours
 
     def k_means(self, num_clusters=2):
         logging.info("Processing {} image of shape {}".format(self.encoding, self.img.shape))
@@ -191,3 +196,10 @@ def convert_rgb_img_to_b64string(img):
     logging.info("Image encoded to jpg base64 string".format())
 
     return jpg_as_text
+
+
+image_id = df_by_image.index[2] # Select an image with 15 ships
+selfimage = Image(image_id)
+selfimage.load(img_zip, df)
+selfimage.load_ships()
+# r = image.records
