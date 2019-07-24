@@ -14,7 +14,7 @@ logger.handlers = []
 
 # Set level
 logger.setLevel(logging.INFO)
-logger.setLevel(logging.DEBUG)
+# logger.setLevel(logging.DEBUG)
 
 # Create formatter
 FORMAT = "%(levelno)-2s %(asctime)s : %(message)s"
@@ -173,16 +173,18 @@ jpg_ellipse_image = convert_rgb_img_to_b64string(ndarray_ellipse_image)
 
 # %%%%%%%%%%%% DASH
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+# external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+# app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+assets_url_path = Path.cwd() / 'dash_app' / 'assets'
+assert assets_url_path.exists()
+app = dash.Dash(__name__, assets_url_path=str( assets_url_path ))
 
 MAX_SHIPS = 15
 
 app.layout = html.Div(children=[
 
     # Main title
-    html.H1(children='Satellite Data visualization'),
+    html.H1(children='Satellite Data visualization', className='title'),
     # Sub-text
     # dhtml.Div(children='''
     #     Dash: Test app number 1 ... !

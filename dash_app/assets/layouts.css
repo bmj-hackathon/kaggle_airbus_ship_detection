@@ -1,4 +1,5 @@
-.app-header {
+.section-container {
     position: relative;
     width:80%;
+    background-color: lightcyan;
 }
