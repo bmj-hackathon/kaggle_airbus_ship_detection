@@ -184,14 +184,14 @@ class Image():
 
         kmeans = sk.cluster.MiniBatchKMeans(2)
         kmeans.fit(data)
-        logging.info("Fit {} pixels {} clusters".format(data.shape[0], num_clusters))
+        logging.info("Fit {} pixels into {} clusters".format(data.shape[0], num_clusters))
         unique, counts = np.unique(kmeans.labels_, return_counts=True)
         for c_name, c_count, c_position in zip(unique, counts, kmeans.cluster_centers_):
             logging.info("\tCluster {} at {} with {:0.1%} of the pixels".format(c_name, np.around(c_position, 3), c_count/data.shape[0])),
 
         if len(unique) == 2:
             dist = np.linalg.norm(kmeans.cluster_centers_[0] - kmeans.cluster_centers_[1])
-            logging.debug("Distance between c1 and c2: {}".format(dist))
+            logging.info("Distance between c1 and c2: {}".format(dist))
         return kmeans
         # all_new_colors = kmeans.cluster_centers_[kmeans.predict(data)]
 
