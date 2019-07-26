@@ -61,6 +61,7 @@ def plot_kmeans_color(ax, img, kmeans):
 
     ax.set(xlabel='Red', ylabel='Green', zlabel='Blue', xlim=(0, 1), ylim=(0, 1))
 # plt.show()
+
 #%%
 image_id = df_by_image.index[2] # Select an image with 15 ships
 image = Image(image_id)
@@ -69,10 +70,59 @@ image.load_ships()
 r = image.records
 
 image.ship_summary_table()
-kmeans = image.k_means()
+kmeans = image.k_means(num_clusters=2)
 
-image.fit_kmeans_pixels(kmeans)
+kmeans_image = fit_kmeans_pixels(image.img, kmeans)
+plt.imshow(kmeans_image)
+plt.show()
 
+#%%
+# TODO: This works...
+fig = plt.figure(figsize=PAPER['A4_LANDSCAPE'], facecolor='white')
+ax = plt.axes(projection="3d")
+plot_kmeans_color(ax, image.img, kmeans)
+plt.show()
+#%%
+# TODO: This doesn't work??
+fig = plt.figure(figsize=PAPER['A4_LANDSCAPE'], facecolor='white')
+ax = plt.axes(projection="3d")
+
+# Flatten to a list of pixels
+new_shape = kmeans_image.shape[0] * kmeans_image.shape[1], kmeans_image.shape[2]
+pixels_vector = kmeans_image.reshape(new_shape)
+N_points = 20000
+
+# Downsampling to a random list of indices
+N_points = 20000
+rng = np.random.RandomState(0)
+i = rng.permutation(pixels_vector.shape[0])[:N_points]
+
+# Sampled labels (cluster num)
+cluster_numbers = np.unique(kmeans.labels_).tolist()
+labels = kmeans.labels_[i]
+# RGB vectors from the sampled pixels vector
+# TODO: Do not split into RGB vectors!?
+R, G, B = pixels_vector[i].T
+# Cluster integer labels
+
+
+# A list of markers
+# TODO: Expand marker list for more clusters, select down, wrap end
+cluster_markers = ['1', '+']
+
+for cluster_num, cluster_marker in zip(cluster_numbers, cluster_markers):
+    # print(cluster_num, cluster_marker)
+    this_cluster_mask = labels == cluster_num
+    # logging.info("Cluster {} with {} points".format(cluster_num, sum(this_cluster_mask)))
+    # sum(this_cluster_mask)
+    ax.scatter(R[this_cluster_mask], G[this_cluster_mask], B[this_cluster_mask], color=pixels_vector[i][this_cluster_mask],
+               marker=cluster_marker)
+
+ax.set(xlabel='Red', ylabel='Green', zlabel='Blue', xlim=(0, 1), ylim=(0, 1))
+plt.show()
+
+#%%
+# OLD
 summary_kmeans(kmeans)
 
 kmeans.cluster_centers_
@@ -80,6 +130,7 @@ kmeans.cluster_centers_
 # rotated_rect
 
 # %% Start a fig
+# OLD
 
 # Select an Image
 # image_id = df_by_image.index[-1]
@@ -99,7 +150,6 @@ plt.interactive(False)
 #%%
 #### Create fig ####
 fig = plt.figure(figsize=PAPER['A4_LANDSCAPE'], facecolor='white')
-
 #### Define the layout ####
 gs = plt.GridSpec(3, 3)
 # Adjust margins

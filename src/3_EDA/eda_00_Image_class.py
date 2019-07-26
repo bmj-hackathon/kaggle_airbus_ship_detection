@@ -182,7 +182,7 @@ class Image():
         data = data.reshape(data.shape[0] * data.shape[1], data.shape[2])
         logging.info("Reshape to pixel list {}".format(data.shape))
 
-        kmeans = sk.cluster.MiniBatchKMeans(2)
+        kmeans = sk.cluster.MiniBatchKMeans(num_clusters)
         kmeans.fit(data)
         logging.info("Fit {} pixels into {} clusters".format(data.shape[0], num_clusters))
         unique, counts = np.unique(kmeans.labels_, return_counts=True)
@@ -195,23 +195,34 @@ class Image():
         return kmeans
         # all_new_colors = kmeans.cluster_centers_[kmeans.predict(data)]
 
-    def fit_kmeans_pixels(self, kmeans):
-        original_pixels = self.img.copy() / 255
-        original_pixels = image.img.copy() / 255
-        new_shape = original_pixels.shape[0] * original_pixels.shape[1], original_pixels.shape[2]
-        original_pixels = original_pixels.reshape(new_shape)
-        # logging.info("Reshape to pixel list {}".format(original_pixels.shape))
-        # logging.info("Changed values to 0-1 range".format(img.shape))
-        logging.info("Scaled image to [0-1] and reshaped to {}".format(new_shape))
+def fit_kmeans_pixels(img, kmeans):
+    """
 
-        predicted_cluster = kmeans.predict(original_pixels)
-        # TODO: Document this Numpy behaviour - indexing one array with an integer array of indices
-        # Creates a new array, of length equal to indexing array
-        # test_a = predicted_cluster[0:10]
-        # test_asdf = kmeans.cluster_centers_
-        # test_asdf[test_a]
-        all_new_colors = kmeans.cluster_centers_[predicted_cluster]
-        logging.info("Assigned each pixel to a cluster (color vector).".format())
+    :param img: An RGB image
+    :param kmeans: The fit KMeans sci-kit object over this image
+    :return: A new image, fit to the clusters of the image
+    """
+    original_pixels = img / 255
+    # original_pixels = image.img.copy() / 255
+    new_shape = original_pixels.shape[0] * original_pixels.shape[1], original_pixels.shape[2]
+    original_pixels = original_pixels.reshape(new_shape)
+    # logging.info("Reshape to pixel list {}".format(original_pixels.shape))
+    # logging.info("Changed values to 0-1 range".format(img.shape))
+    logging.info("Scaled image to [0-1] and reshaped to {}".format(new_shape))
+
+    predicted_cluster = kmeans.predict(original_pixels)
+    # TODO: Document this Numpy behaviour - indexing one array with an integer array of indices
+    # Creates a new array, of length equal to indexing array
+    # test_a = predicted_cluster[0:10]
+    # test_asdf = kmeans.cluster_centers_
+    # test_asdf[test_a]
+    all_new_colors = kmeans.cluster_centers_[predicted_cluster]
+    logging.info("Assigned each pixel to a cluster (color vector).".format())
+
+    all_new_colors = all_new_colors.reshape(img.shape)
+    logging.info("Reshape pixels back to original shape".format())
+
+    return all_new_colors
 
 
 def convert_rgb_img_to_b64string(img):
