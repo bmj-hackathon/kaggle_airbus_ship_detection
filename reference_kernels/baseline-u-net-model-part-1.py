@@ -419,7 +419,7 @@ seg_model.compile(optimizer=Adam(1e-4, decay=1e-6), loss=dice_p_bce, metrics=[di
 #%%
 
 weight_path = DIR_WEIGHTS / "{}_weights.best.hdf5".format('seg_model')
-
+weight_path = str(weight_path)
 checkpoint = ModelCheckpoint(weight_path, monitor='val_dice_coef', verbose=1, 
                              save_best_only=True, mode='max', save_weights_only = True)
 
@@ -444,7 +444,7 @@ loss_history = [seg_model.fit_generator(aug_gen,
                                        )]
 
 
-# %% {"_uuid": "a168c8b1af446b800f6129104906003ededd61c4"}
+# %%
 def show_loss(loss_history):
     epich = np.cumsum(np.concatenate(
         [np.linspace(0.5, 1, len(mh.epoch)) for mh in loss_history]))
