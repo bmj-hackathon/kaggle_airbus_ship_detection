@@ -196,14 +196,14 @@ print(valid_df.shape[0], 'validation masks')
 # ### Examine Number of Ship Images
 # Here we examine how often ships appear and replace the ones without any ships with 0
 
-# %% {"_uuid": "2612fa47c7e9fdcaa7aa720c4e15fc86fd65d69a"}
+# %%
 train_df['ships'].hist()
 # plt.show()
 # %% [markdown] {"_uuid": "ef8115a80749ac47f295e9a70217a5553970c2b3"}
 # # Undersample Empty Images
 # Here we undersample the empty images to get a better balanced group with more ships to try and segment
 
-# %% {"_uuid": "0cf0bb261eda957cb0a12a330260e1390c57c8c9"}
+# %%
 train_df['grouped_ship_count'] = train_df['ships'].map(lambda x: (x+1)//2).clip(0, 7)
 def sample_ships(in_df, base_rep_val=1500):
     if in_df['ships'].values[0]==0:
@@ -434,6 +434,8 @@ callbacks_list = [checkpoint, early, reduceLROnPlat]
 
 # %%
 step_count = min(MAX_TRAIN_STEPS, balanced_train_df.shape[0]//BATCH_SIZE)
+# TODO: Step count
+step_count = 50
 aug_gen = create_aug_gen(make_image_gen(balanced_train_df))
 loss_history = [seg_model.fit_generator(aug_gen, 
                              steps_per_epoch=step_count, 
