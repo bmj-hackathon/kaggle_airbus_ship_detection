@@ -119,7 +119,6 @@ masks = pd.read_csv(os.path.join('../input/', 'train_ship_segmentations.csv'))
 not_empty = pd.notna(masks.EncodedPixels)
 print(not_empty.sum(), 'masks in', masks[not_empty].ImageId.nunique(), 'images')
 print((~not_empty).sum(), 'empty images in', masks.ImageId.nunique(), 'total images')
-masks.head()
 
 # %% [markdown] {"_uuid": "fdedd5965f47f84aa8f3aab1cad978512781a1cc"}
 # # Make sure encode/decode works

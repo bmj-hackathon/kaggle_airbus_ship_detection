@@ -22,8 +22,31 @@ VALID_IMG_COUNT = 400
 MAX_TRAIN_STEPS = 200
 AUGMENT_BRIGHTNESS = False
 
+#%%
+import logging
+import sys
+logger = logging.getLogger()
+logger.handlers = []
+
+# Set level
+logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
+
+# Create formatter
+FORMAT = "%(levelno)-2s %(asctime)s : %(message)s"
+DATE_FMT = "%Y-%m-%d %H:%M:%S"
+formatter = logging.Formatter(FORMAT, DATE_FMT)
+
+# Create handler and assign
+handler = logging.StreamHandler(sys.stderr)
+handler.setFormatter(formatter)
+logger.handlers = [handler]
+logging.info("Logging started")
+
 # %%
 import os
+import logging
+from pathlib import Path
 import numpy as np # linear algebra
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 from skimage.io import imread
@@ -78,14 +101,27 @@ def masks_as_image(in_mask_list):
     return np.expand_dims(all_masks, -1)
 
 
-# %% {"_uuid": "3ca7119188fbb4c6540d9df55f5833b55435287e"}
-masks = pd.read_csv(os.path.join('../input/',
-                                 'train_ship_segmentations_v2.csv'))
+# %%
+DIR_INPUT = Path("~/DATA/airbus-ship-detection-sample").expanduser()
+assert DIR_INPUT.exists()
+PATH_CSV = DIR_INPUT / 'train_ship_segmentations_v2.csv'
+assert PATH_CSV.exists()
+DIR_IMAGES = DIR_INPUT / 'images'
+assert DIR_IMAGES.exists()
+masks = pd.read_csv(PATH_CSV)
 print(masks.shape[0], 'masks found')
 print(masks['ImageId'].value_counts().shape[0])
-masks.head()
 
-# %% [markdown] {"_uuid": "fdedd5965f47f84aa8f3aab1cad978512781a1cc"}
+
+#%% Align the df with the actual sampled data
+masks
+DIR_IMAGES.joinpath('teas').exists()
+masks['exists'] = masks['ImageId'].apply(lambda image_id: DIR_IMAGES.joinpath(image_id).exists())
+# r = masks.head(10)
+masks = masks[masks['exists']]
+logging.info("Resampled df to match existing images, {} records".format(len(masks)))
+
+# %% [markdown]
 # # Make sure encode/decode works
 # Given the process
 # $$  RLE_0 \stackrel{Decode}{\longrightarrow} \textrm{Image}_0 \stackrel{Encode}{\longrightarrow} RLE_1 \stackrel{Decode}{\longrightarrow} \textrm{Image}_1 $$
@@ -95,7 +131,7 @@ masks.head()
 #
 #
 
-# %% {"_uuid": "0081fd6f387abd7c05eb35f29575a2ee6ddc2236"}
+# %%
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize = (10, 5))
 rle_0 = masks.query('ImageId=="00021ddc3.jpg"')['EncodedPixels']
 img_0 = masks_as_image(rle_0)
@@ -108,24 +144,28 @@ ax2.set_title('Image$_1$')
 print('Check Decoding->Encoding',
       'RLE_0:', len(rle_0), '->',
       'RLE_1:', len(rle_1))
+# plt.show()
 
-# %% [markdown] {"_uuid": "40cb72e241c0c3d8bc245b4e3c663b4a835b0011"}
+# %% [markdown]
 # # Split into training and validation groups
 # We stratify by the number of boats appearing so we have nice balances in each set
 
-# %% {"_uuid": "c4f008bf6898518fd371de013418f936edaa09f8"}
+# %%
 masks['ships'] = masks['EncodedPixels'].map(lambda c_row: 1 if isinstance(c_row, str) else 0)
 unique_img_ids = masks.groupby('ImageId').agg({'ships': 'sum'}).reset_index()
 unique_img_ids['has_ship'] = unique_img_ids['ships'].map(lambda x: 1.0 if x>0 else 0.0)
 unique_img_ids['has_ship_vec'] = unique_img_ids['has_ship'].map(lambda x: [x])
 # some files are too small/corrupt
-unique_img_ids['file_size_kb'] = unique_img_ids['ImageId'].map(lambda c_img_id: 
-                                                               os.stat(os.path.join(train_image_dir, 
-                                                                                    c_img_id)).st_size/1024)
+masks['ImageId'].apply(lambda image_id: DIR_IMAGES.joinpath(image_id).exists())
+
+unique_img_ids['file_size_kb'] = unique_img_ids['ImageId'].map(lambda image_id: os.stat(DIR_IMAGES.joinpath(image_id)).st_size/1024)
 unique_img_ids = unique_img_ids[unique_img_ids['file_size_kb']>50] # keep only 50kb files
 unique_img_ids['file_size_kb'].hist()
+# plt.show()
 masks.drop(['ships'], axis=1, inplace=True)
 unique_img_ids.sample(5)
+logging.info("Unique records: {}".format(len(unique_img_ids)))
+logging.info("Total records: {}".format(len(masks)))
 
 # %% {"_uuid": "871720221ac25f7f9408bfe01aeb4ccb95edbd1f"}
 from sklearn.model_selection import train_test_split
