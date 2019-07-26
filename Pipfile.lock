@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "730055c67a06de4b40fc79ad74d5804041c94c84ba2bda318eb65ab31f53b02a"
+            "sha256": "eb8f52fa2130491f4cc2887fed225630d43b79a70fc2ccea5c5c3a370f592b04"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -436,6 +436,7 @@
                 "sha256:f12b4f7e2d8f9da3141564e6737d79016fe5336cc92de6814eba579744f65b0a",
                 "sha256:f58ac38d5ca045a377b3b377c84df8175ab992c970a53332fa8ac2373df44ff7"
             ],
+            "index": "pypi",
             "version": "==1.16.4"
         },
         "opencv-python": {
@@ -599,10 +600,10 @@
         },
         "pyparsing": {
             "hashes": [
-                "sha256:1873c03321fc118f4e9746baf201ff990ceb915f433f23b395f5580d1840cb2a",
-                "sha256:9b6323ef4ab914af344ba97510e966d64ba91055d6b9afa6b30799340e89cc03"
+                "sha256:43c5486cefefa536c9aab528881c992328f020eefe4f6d06332449c365218580",
+                "sha256:d6c5ffe9d0305b9b977f7a642d36b9370954d1da7ada4c62393382cbadad4265"
             ],
-            "version": "==2.4.0"
+            "version": "==2.4.1.1"
         },
         "pyrsistent": {
             "hashes": [

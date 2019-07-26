@@ -1,26 +1,12 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.2'
-#       jupytext_version: 1.2.0
-#   kernelspec:
-#     display_name: Python 3
-#     language: python
-#     name: python3
-# ---
-
-# %% [markdown] {"_uuid": "aa8401d73c7a19e1a43fdd6a992ea9dcb60039a2"}
+# %% [markdown]
 # # Overview
 # The notebook shows how to extract the segmentation map for the ships, augment the images and train a simple DNN model to detect them. A few additional tweaks like balancing the ship-count out a little better have been done.
 
-# %% [markdown] {"_uuid": "a6cd9d5ad61ffe3b8858769f20a5f9493f024a56"}
+# %% [markdown]
 # ## Model Parameters
 # We might want to adjust these later (or do some hyperparameter optimizations)
 
-# %% {"_uuid": "301a5d939c566d1487a049bb2554d09b592b18b1"}
+# %%
 BATCH_SIZE = 4
 EDGE_CROP = 16
 NB_EPOCHS = 5
@@ -36,17 +22,14 @@ VALID_IMG_COUNT = 400
 MAX_TRAIN_STEPS = 200
 AUGMENT_BRIGHTNESS = False
 
-# %% {"_uuid": "2c826bd059a97f34ef3549a393d140dd1451d657"}
-# !ls ../input
-
-# %% {"_uuid": "8f2839f25d086af736a60e9eeb907d3b93b6e0e5", "_cell_guid": "b1076dfc-b9ad-4769-8c92-a6c4dae69d19"}
+# %%
 import os
 import numpy as np # linear algebra
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 from skimage.io import imread
 import matplotlib.pyplot as plt
 from skimage.segmentation import mark_boundaries
-from skimage.util.montage import montage2d as montage
+from skimage.util import montage
 montage_rgb = lambda x: np.stack([montage(x[:, :, :, i]) for i in range(x.shape[3])], -1)
 ship_dir = '../input'
 train_image_dir = os.path.join(ship_dir, 'train_v2')
