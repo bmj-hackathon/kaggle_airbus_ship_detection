@@ -47,19 +47,35 @@ logging.info("Logging started")
 import os
 import logging
 from pathlib import Path
+
+
 import numpy as np # linear algebra
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
-from skimage.io import imread
 import matplotlib.pyplot as plt
+
+# SK
+from skimage.io import imread
 from skimage.segmentation import mark_boundaries
 from skimage.util import montage
+from skimage.morphology import label
+from sklearn.model_selection import train_test_split
 montage_rgb = lambda x: np.stack([montage(x[:, :, :, i]) for i in range(x.shape[3])], -1)
-ship_dir = '../input'
-train_image_dir = os.path.join(ship_dir, 'train_v2')
-test_image_dir = os.path.join(ship_dir, 'test_v2')
+
+
+# TensorFlow
+import tensorflow as tf
+from tensorflow.keras import models, layers
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import tensorflow.keras.backend as K
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.losses import binary_crossentropy
+from tensorflow.keras.callbacks import ModelCheckpoint, LearningRateScheduler, EarlyStopping, ReduceLROnPlateau
+
+# ship_dir = '../input'
+# train_image_dir = os.path.join(ship_dir, 'train_v2')
+# test_image_dir = os.path.join(ship_dir, 'test_v2')
 import gc; gc.enable() # memory is tight
 
-from skimage.morphology import label
 def multi_rle_encode(img):
     labels = label(img[:, :, 0])
     return [rle_encode(labels==k) for k in np.unique(labels[labels>0])]
@@ -111,7 +127,7 @@ assert DIR_IMAGES.exists()
 masks = pd.read_csv(PATH_CSV)
 print(masks.shape[0], 'masks found')
 print(masks['ImageId'].value_counts().shape[0])
-
+DIR_WEIGHTS = DIR_INPUT / 'weights'
 
 #%% Align the df with the actual sampled data
 masks
@@ -167,9 +183,8 @@ unique_img_ids.sample(5)
 logging.info("Unique records: {}".format(len(unique_img_ids)))
 logging.info("Total records: {}".format(len(masks)))
 
-# %% {"_uuid": "871720221ac25f7f9408bfe01aeb4ccb95edbd1f"}
-from sklearn.model_selection import train_test_split
-train_ids, valid_ids = train_test_split(unique_img_ids, 
+# %%
+train_ids, valid_ids = train_test_split(unique_img_ids,
                  test_size = 0.3, 
                  stratify = unique_img_ids['ships'])
 train_df = pd.merge(masks, train_ids)
@@ -177,13 +192,13 @@ valid_df = pd.merge(masks, valid_ids)
 print(train_df.shape[0], 'training masks')
 print(valid_df.shape[0], 'validation masks')
 
-# %% [markdown] {"_uuid": "c21d5bff04bf9180463969ac120379345745ed03"}
+# %% [markdown]
 # ### Examine Number of Ship Images
 # Here we examine how often ships appear and replace the ones without any ships with 0
 
 # %% {"_uuid": "2612fa47c7e9fdcaa7aa720c4e15fc86fd65d69a"}
 train_df['ships'].hist()
-
+# plt.show()
 # %% [markdown] {"_uuid": "ef8115a80749ac47f295e9a70217a5553970c2b3"}
 # # Undersample Empty Images
 # Here we undersample the empty images to get a better balanced group with more ships to try and segment
@@ -195,16 +210,18 @@ def sample_ships(in_df, base_rep_val=1500):
         return in_df.sample(base_rep_val//3) # even more strongly undersample no ships
     else:
         return in_df.sample(base_rep_val, replace=(in_df.shape[0]<base_rep_val))
-    
+
 balanced_train_df = train_df.groupby('grouped_ship_count').apply(sample_ships)
 balanced_train_df['ships'].hist(bins=np.arange(10))
+logging.info("Balanced data frame with {} records".format(len(balanced_train_df)))
+# plt.show()
+balanced_train_df['ships'].value_counts().sort_index()
 
-
-# %% [markdown] {"_uuid": "a3fb9fe33d81374c7bd836f5bc86a1df89190805"}
+# %% [markdown]
 # # Decode all the RLEs into Images
 # We make a generator to produce batches of images
 
-# %% {"_uuid": "6181ac51577e5636995e38a9e29311cf47f513ca"}
+# %%
 def make_image_gen(in_df, batch_size = BATCH_SIZE):
     all_batches = list(in_df.groupby('ImageId'))
     out_rgb = []
@@ -212,7 +229,7 @@ def make_image_gen(in_df, batch_size = BATCH_SIZE):
     while True:
         np.random.shuffle(all_batches)
         for c_img_id, c_masks in all_batches:
-            rgb_path = os.path.join(train_image_dir, c_img_id)
+            rgb_path = DIR_IMAGES / c_img_id
             c_img = imread(rgb_path)
             c_mask = masks_as_image(c_masks['EncodedPixels'].values)
             if IMG_SCALING is not None:
@@ -225,13 +242,15 @@ def make_image_gen(in_df, batch_size = BATCH_SIZE):
                 out_rgb, out_mask=[], []
 
 
-# %% {"_uuid": "1983738da75b031f2bec8ba36db01c095e7c5d59"}
+# %%
 train_gen = make_image_gen(balanced_train_df)
+# Get a single sample
 train_x, train_y = next(train_gen)
 print('x', train_x.shape, train_x.min(), train_x.max())
 print('y', train_y.shape, train_y.min(), train_y.max())
 
-# %% {"_uuid": "b4396cd28ddd2e4c8076fcb165e9b61e3baeeeb7"}
+
+# %%
 fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize = (30, 10))
 batch_rgb = montage_rgb(train_x)
 batch_seg = montage(train_y[:, :, :, 0])
@@ -242,21 +261,21 @@ ax2.set_title('Segmentations')
 ax3.imshow(mark_boundaries(batch_rgb, 
                            batch_seg.astype(int)))
 ax3.set_title('Outlined Ships')
-fig.savefig('overview.png')
+plt.show()
+# fig.savefig('overview.png')
 
-# %% [markdown] {"_uuid": "8f47639c987a10ebcb53e51f55aa8a11c98fa860"}
+# %% [markdown]
 # # Make the Validation Set
 
-# %% {"_uuid": "30cb02a2a7103a9d66e90f701991199de1e5b73e"}
+# %%
 valid_x, valid_y = next(make_image_gen(valid_df, VALID_IMG_COUNT))
 print(valid_x.shape, valid_y.shape)
 
-# %% [markdown] {"_uuid": "a8f65e7942816fb75b687a549dc1d5cc48d00e21"}
+# %% [markdown]
 # # Augment Data
 
-# %% {"_cell_guid": "79c7e3d0-c299-4dcb-8224-4455121ee9b0", "_uuid": "d629ff2d2480ee46fbb7e2d37f6b5fab8052498a"}
-from keras.preprocessing.image import ImageDataGenerator
-dg_args = dict(featurewise_center = False, 
+# %%
+dg_args = dict(featurewise_center = False,
                   samplewise_center = False,
                   rotation_range = 15, 
                   width_shift_range = 0.1, 
@@ -292,8 +311,7 @@ def create_aug_gen(in_gen, seed = None):
 
         yield next(g_x)/255.0, next(g_y)
 
-
-# %% {"_uuid": "6122ccb9e58bfac6fa5e11c86121e78d9e5151b1"}
+# %%
 cur_gen = create_aug_gen(train_gen)
 t_x, t_y = next(cur_gen)
 print('x', t_x.shape, t_x.dtype, t_x.min(), t_x.max())
@@ -306,19 +324,21 @@ ax1.imshow(montage_rgb(t_x), cmap='gray')
 ax1.set_title('images')
 ax2.imshow(montage(t_y[:, :, :, 0]), cmap='gray_r')
 ax2.set_title('ships')
+plt.show()
 
-# %% {"_uuid": "33300c4f03b6600da7b418f775d11d7ebf76a35a"}
+# %%
 gc.collect()
 
-# %% [markdown] {"_uuid": "ba08494eb9736ec3556b7c879143cdcdea89febf"}
+# %% [markdown]
 # # Build a Model
 # Here we use a slight deviation on the U-Net standard
 
-# %% {"_uuid": "2687377309d3cbbab1197f4eccd2b50ab996f5a6"}
-from keras import models, layers
+# %%
+
 # Build U-Net model
 def upsample_conv(filters, kernel_size, strides, padding):
     return layers.Conv2DTranspose(filters, kernel_size, strides=strides, padding=padding)
+
 def upsample_simple(filters, kernel_size, strides, padding):
     return layers.UpSampling2D(strides)
 
@@ -384,10 +404,8 @@ if NET_SCALING is not None:
 seg_model = models.Model(inputs=[input_img], outputs=[d])
 seg_model.summary()
 
-# %% {"_uuid": "1678069aa8013510264ba898291c6ae2dce88a76"}
-import keras.backend as K
-from keras.optimizers import Adam
-from keras.losses import binary_crossentropy
+# %%
+
 def dice_coef(y_true, y_pred, smooth=1):
     intersection = K.sum(y_true * y_pred, axis=[1,2,3])
     union = K.sum(y_true, axis=[1,2,3]) + K.sum(y_pred, axis=[1,2,3])
@@ -398,9 +416,9 @@ def true_positive_rate(y_true, y_pred):
     return K.sum(K.flatten(y_true)*K.flatten(K.round(y_pred)))/K.sum(y_true)
 seg_model.compile(optimizer=Adam(1e-4, decay=1e-6), loss=dice_p_bce, metrics=[dice_coef, 'binary_accuracy', true_positive_rate])
 
-# %% {"_uuid": "7282d18de3aff1cee12ff89b7d511a391702814f"}
-from keras.callbacks import ModelCheckpoint, LearningRateScheduler, EarlyStopping, ReduceLROnPlateau
-weight_path="{}_weights.best.hdf5".format('seg_model')
+#%%
+
+weight_path = DIR_WEIGHTS / "{}_weights.best.hdf5".format('seg_model')
 
 checkpoint = ModelCheckpoint(weight_path, monitor='val_dice_coef', verbose=1, 
                              save_best_only=True, mode='max', save_weights_only = True)
@@ -414,7 +432,7 @@ early = EarlyStopping(monitor="val_dice_coef",
 callbacks_list = [checkpoint, early, reduceLROnPlat]
 
 
-# %% {"_uuid": "5b67d808c0b8c7e28bff41e6d3858ff6f09dd626"}
+# %%
 step_count = min(MAX_TRAIN_STEPS, balanced_train_df.shape[0]//BATCH_SIZE)
 aug_gen = create_aug_gen(make_image_gen(balanced_train_df))
 loss_history = [seg_model.fit_generator(aug_gen, 

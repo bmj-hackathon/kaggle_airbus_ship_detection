@@ -19,9 +19,9 @@ ipykernel = "*"
 deprecated = "*"
 opencv-python = "*"
 scikit-image = "*"
-tensorflow-gpu = "*"
+tensorflow-gpu = "==1.12"
 pillow = "*"
-imutils = {path = "/home/batman/kaggle/imutils",editable = true}
+imutils = {editable = true,path = "/home/batman/kaggle/imutils"}
 dash = "*"
 dash-daq = "*"
 numpy = "*"
