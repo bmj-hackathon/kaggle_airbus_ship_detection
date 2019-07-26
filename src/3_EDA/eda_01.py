@@ -7,7 +7,52 @@ def summary_kmeans(kmeans):
     cluster_colors = np.unique(all_new_colors, axis=0)
 
 
+def plot_kmeans_color(ax, img):
 
+    logging.info("Processing image of shape {}".format(img.shape))
+    data = img / 255
+    logging.info("Changed values to 0-1 range".format(img.shape))
+    data = data.reshape(data.shape[0] * data.shape[1], data.shape[2])
+    logging.info("Reshape to pixel list {}".format(data.shape))
+
+    num_clusters = 2
+    kmeans = sk.cluster.MiniBatchKMeans(2)
+    kmeans.fit(data)
+
+    all_new_colors = kmeans.cluster_centers_[kmeans.predict(data)]
+
+    all_cluster_labels = kmeans.labels_
+    cluster_counts = np.bincount(all_cluster_labels).tolist()
+    cluster_names = np.unique(all_cluster_labels).tolist()
+    cluster_colors = np.unique(all_new_colors, axis=0)
+
+    N_points = 20000
+
+    # Generate a list of 20000 indices
+    rng = np.random.RandomState(0)
+    i = rng.permutation(data.shape[0])[:N_points]
+    colors_i = all_new_colors[i]
+    labels_i = all_cluster_labels[i]
+    R, G, B = data[i].T
+
+    # fig = plt.figure()
+    # ax = fig.add_subplot(1, 1, 1, projection="3d")
+
+    # cluster_markers = ['x','+']
+    cluster_markers = ['1','+']
+
+    for cluster_name, cluster_marker in zip(cluster_names, cluster_markers):
+        print(cluster_name, cluster_marker)
+        this_cluster_mask = labels_i == cluster_name
+
+        logging.info("Cluster {} with {} points".format(cluster_name, sum(this_cluster_mask)))
+
+        # sum(this_cluster_mask)
+
+        ax.scatter(R[this_cluster_mask], G[this_cluster_mask], B[this_cluster_mask], color=colors_i[this_cluster_mask], marker=cluster_marker, depthshade=False)
+
+    ax.set(xlabel='Red', ylabel='Green', zlabel='Blue', xlim=(0, 1), ylim=(0, 1))
+# plt.show()
 #%%
 image_id = df_by_image.index[2] # Select an image with 15 ships
 image = Image(image_id)
@@ -18,6 +63,9 @@ r = image.records
 image.ship_summary_table()
 kmeans = image.k_means()
 
+summary_kmeans(kmeans)
+
+kmeans.cluster_centers_
 
 # rotated_rect
 
