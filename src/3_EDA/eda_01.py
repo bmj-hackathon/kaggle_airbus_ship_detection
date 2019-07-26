@@ -7,19 +7,27 @@ def summary_kmeans(kmeans):
     cluster_colors = np.unique(all_new_colors, axis=0)
 
 
-def plot_kmeans_color(ax, img):
+def plot_kmeans_color(ax, img, kmeans):
+    """asdf
 
-    logging.info("Processing image of shape {}".format(img.shape))
-    data = img / 255
-    logging.info("Changed values to 0-1 range".format(img.shape))
-    data = data.reshape(data.shape[0] * data.shape[1], data.shape[2])
-    logging.info("Reshape to pixel list {}".format(data.shape))
+    :param ax: The axis to plot into
+    :param img: The orignal image
+    :param kmeans: The FIT kmeans object
+    :return:
+    """
 
-    num_clusters = 2
-    kmeans = sk.cluster.MiniBatchKMeans(2)
-    kmeans.fit(data)
+    # logging.info("Processing image of shape {}".format(img.shape))
+    original_pixels = img / 255
+    # logging.info("Changed values to 0-1 range".format(img.shape))
+    new_shape = original_pixels.shape[0] * original_pixels.shape[1], original_pixels.shape[2]
+    original_pixels = original_pixels.reshape(new_shape)
+    # logging.info("Reshape to pixel list {}".format(original_pixels.shape))
 
-    all_new_colors = kmeans.cluster_centers_[kmeans.predict(data)]
+    # num_clusters = 2
+    # kmeans = sk.cluster.MiniBatchKMeans(2)
+    kmeans.fit(original_pixels)
+
+    all_new_colors = kmeans.cluster_centers_[kmeans.predict(original_pixels)]
 
     all_cluster_labels = kmeans.labels_
     cluster_counts = np.bincount(all_cluster_labels).tolist()
@@ -30,10 +38,10 @@ def plot_kmeans_color(ax, img):
 
     # Generate a list of 20000 indices
     rng = np.random.RandomState(0)
-    i = rng.permutation(data.shape[0])[:N_points]
+    i = rng.permutation(original_pixels.shape[0])[:N_points]
     colors_i = all_new_colors[i]
     labels_i = all_cluster_labels[i]
-    R, G, B = data[i].T
+    R, G, B = original_pixels[i].T
 
     # fig = plt.figure()
     # ax = fig.add_subplot(1, 1, 1, projection="3d")
@@ -62,6 +70,8 @@ r = image.records
 
 image.ship_summary_table()
 kmeans = image.k_means()
+
+image.fit_kmeans_pixels(kmeans)
 
 summary_kmeans(kmeans)
 
