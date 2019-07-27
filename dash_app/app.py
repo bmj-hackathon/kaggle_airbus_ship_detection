@@ -66,7 +66,12 @@ import pandas as pd
 from pathlib import Path
 import zipfile
 
+#%%
 
+# iris = px.data.iris()
+# print(go.Scatter3d)
+# print("Iris", iris)
+# trace=[go.Scatter3d(iris, x='sepal_length', y='sepal_width', z='petal_width', color='species')]
 # %%%%%%%%%%%% CLASSES
 # %%
 def plot_hist(img, ax):
@@ -462,31 +467,46 @@ app.layout = html.Div(children=[
     # ),
 
     ###### SECTION: TESTING GRAPHS
+
+    html.Div(),
+
     html.Div([
-        html.Div([html.H1("United States Exports")],
-                 style={'textAlign': "center", "padding-bottom": "10", "padding-top": "10"}),
-        html.Div(
-            [html.Div(
-                dcc.Dropdown(id="select-xaxis", options=[{'label': i.title(), 'value': i} for i in df_test.columns[3:]],
-                             value='beef', ), className="four columns",
-                style={"display": "block", "margin-left": "auto",
-                       "margin-right": "auto", "width": "33%"}),
-             html.Div(dcc.Dropdown(id="select-yaxis",
-                                   options=[{'label': i.title(), 'value': i} for i in df_test.columns[3:]],
-                                   value='pork', ), className="four columns",
-                      style={"display": "block", "margin-left": "auto",
-                             "margin-right": "auto", "width": "33%"}),
-             html.Div(dcc.Dropdown(id="select-zaxis",
-                                   options=[{'label': i.title(), 'value': i} for i in df_test.columns[3:]],
-                                   value='poultry', ), className="four columns",
-                      style={"display": "block", "margin-left": "auto",
-                             "margin-right": "auto", "width": "33%"})
-             ], className="row", style={"padding": 14, "display": "block", "margin-left": "auto",
-                                        "margin-right": "auto", "width": "80%"}),
         html.Div([dcc.Graph(id="my-graph")])
-    ], className="container")
+    ], className="container"),
+
+    html.Div([dcc.Graph(
+        id='basic-interactions',
+        figure={
+            'data': [
+                {
+                    'x': [1, 2, 3, 4],
+                    'y': [4, 1, 3, 5],
+                    'z': [4, 1, 3, 5],
+                    'text': ['a', 'b', 'c', 'd'],
+                    'customdata': ['c.a', 'c.b', 'c.c', 'c.d'],
+                    'name': 'Trace 1',
+                    'mode': 'markers',
+                    'marker': {'size': 12}
+                },
+                {
+                    'x': [1, 2, 3, 4],
+                    'y': [9, 4, 1, 4],
+                    'z': [9, 4, 1, 4],
+                    'text': ['w', 'x', 'y', 'z'],
+                    'customdata': ['c.w', 'c.x', 'c.y', 'c.z'],
+                    'name': 'Trace 2',
+                    'mode': 'markers',
+                    'marker': {'size': 12}
+                }
+            ],
+            'layout': {
+                'clickmode': 'event+select'
+            }
+        }
+    )]),
 
 ])
+
 
 
 # %%-----------------
@@ -631,27 +651,24 @@ if 0:
 
 
 # %% TESTING GRAPH
+
+
 # https://github.com/plotly/simple-example-chart-apps/blob/master/dash-3dscatterplot/apps/main.py
 @app.callback(
     dash.dependencies.Output("my-graph", "figure"),
-    [dash.dependencies.Input("select-xaxis", "value"),
-     dash.dependencies.Input("select-yaxis", "value"),
-     dash.dependencies.Input("select-zaxis", "value")]
-
+    []
 )
-def ugdate_figure(selected_x, selected_y, selected_z):
-    z = df_us_ag[selected_z]
-    trace = [go.Scatter3d(
-        x=df_us_ag[selected_x], y=df_us_ag[selected_y], z=df_us_ag[selected_z],
-        mode='markers', marker={'size': 8, 'color': z, 'colorscale': 'Blackbody', 'opacity': 0.8, "showscale": True,
-                                "colorbar": {"thickness": 15, "len": 0.5, "x": 0.8, "y": 0.6, }, })]
+def update_figure(selected_x, selected_y, selected_z):
+    iris = px.data.iris()
+    trace = [go.Scatter3d(iris, x='sepal_length', y='sepal_width', z='petal_width', color='species')]
     return {"data": trace,
             "layout": go.Layout(
-                height=700, title=f"Exports<br>{selected_x.title(), selected_y.title(), selected_z.title()}",
+                height=700, title=f"TITLE HERE",
                 paper_bgcolor="#f3f3f3",
-                scene={"aspectmode": "cube", "xaxis": {"title": f"{selected_x.title()} (USD)", },
-                       "yaxis": {"title": f"{selected_y.title()} (USD)", },
-                       "zaxis": {"title": f"{selected_z.title()} (USD)", }})
+                scene={"aspectmode": "cube",
+                       "xaxis": {"title": f"X", },
+                       "yaxis": {"title": f"Y", },
+                       "zaxis": {"title": f"Z", }})
             }
 
 
