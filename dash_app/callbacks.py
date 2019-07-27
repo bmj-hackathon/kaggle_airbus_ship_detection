@@ -89,6 +89,7 @@ def register_callbacks(app, df, df_by_image, img_zip, Image):
     # --------------------
     @app.callback(
         [
+            dash.dependencies.Output('ship-data-table', 'columns'),
             dash.dependencies.Output('ship-data-table', 'data'),
             dash.dependencies.Output('base-ship-image', 'src'),
         ],
@@ -117,9 +118,11 @@ def register_callbacks(app, df, df_by_image, img_zip, Image):
         ndarray_ellipse_image = image.draw_ellipses_img()
         jpg_ellipse_image = convert_rgb_img_to_b64string(ndarray_ellipse_image)
         image_source_string = "data:image/png;base64, {}".format(jpg_ellipse_image)
+        col_heads = [{"name": i, "id": i} for i in df_ships.columns]
+        # print(col_heads)
         data = df_ships.to_dict('records')
         # print(data)
-        return data, image_source_string
+        return col_heads, data, image_source_string
 
 
     # %%-----------------

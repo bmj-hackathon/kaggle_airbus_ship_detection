@@ -6,64 +6,67 @@ def summary_kmeans(kmeans):
     cluster_names = np.unique(all_cluster_labels).tolist()
     cluster_colors = np.unique(all_new_colors, axis=0)
 
-
-def plot_kmeans_color(ax, img, kmeans):
+def get_kmeans_color(img, _kmeans):
     """asdf
 
     :param ax: The axis to plot into
     :param img: The orignal image
-    :param kmeans: The FIT kmeans object
+    :param _kmeans: The FIT kmeans object
     :return:
     """
 
-    # logging.info("Processing image of shape {}".format(img.shape))
     original_pixels = img / 255
-    # logging.info("Changed values to 0-1 range".format(img.shape))
     new_shape = original_pixels.shape[0] * original_pixels.shape[1], original_pixels.shape[2]
-    original_pixels = original_pixels.reshape(new_shape)
-    # logging.info("Reshape to pixel list {}".format(original_pixels.shape))
+    original_pixel_locations_flat = original_pixels.reshape(new_shape)
 
-    # num_clusters = 2
-    # kmeans = sk.cluster.MiniBatchKMeans(2)
-    kmeans.fit(original_pixels)
+    new_pixel_colors = _kmeans.cluster_centers_[_kmeans.predict(original_pixel_locations_flat)]
+    logging.info("New pixels, shape {}".format(new_pixel_colors.shape))
+    logging.info("Colors: {}".format(np.unique(new_pixel_colors, axis=0)))
 
-    all_new_colors = kmeans.cluster_centers_[kmeans.predict(original_pixels)]
-
-    all_cluster_labels = kmeans.labels_
-    cluster_counts = np.bincount(all_cluster_labels).tolist()
-    cluster_names = np.unique(all_cluster_labels).tolist()
-    cluster_colors = np.unique(all_new_colors, axis=0)
+    cluster_labels = np.unique(_kmeans.labels_).tolist()
+    logging.info("{} custers: {}".format(len(cluster_labels), cluster_labels))
 
     N_points = 20000
-
     # Generate a list of 20000 indices
     rng = np.random.RandomState(0)
-    i = rng.permutation(original_pixels.shape[0])[:N_points]
-    colors_i = all_new_colors[i]
-    labels_i = all_cluster_labels[i]
-    R, G, B = original_pixels[i].T
+    i = rng.permutation(original_pixel_locations_flat.shape[0])[:N_points]
+    logging.info("Sampling {} points".format(len(i)))
 
-    # fig = plt.figure()
-    # ax = fig.add_subplot(1, 1, 1, projection="3d")
+    pixel_locations = original_pixel_locations_flat[i]
+    logging.info("Returning pixel locations: {}".format(pixel_locations.shape))
+    color_vec_i = new_pixel_colors[i]
+    logging.info("Returning colors: {}".format(color_vec_i.shape))
+    labels_vec_i = _kmeans.labels_[i]
+    logging.info("Returning labels: {}".format(labels_vec_i))
 
-    # cluster_markers = ['x','+']
-    cluster_markers = ['1','+']
+    return pixel_locations, color_vec_i, labels_vec_i
 
-    for cluster_name, cluster_marker in zip(cluster_names, cluster_markers):
-        print(cluster_name, cluster_marker)
-        this_cluster_mask = labels_i == cluster_name
+def plot_kmeans_color2(pixel_locs, colors, labels):
+    fig = plt.figure(figsize=PAPER['A4_LANDSCAPE'], facecolor='white')
+    ax = plt.axes(projection="3d")
+    R, G, B = pixel_locs.T
 
-        logging.info("Cluster {} with {} points".format(cluster_name, sum(this_cluster_mask)))
-
-        # sum(this_cluster_mask)
-
-        ax.scatter(R[this_cluster_mask], G[this_cluster_mask], B[this_cluster_mask], color=colors_i[this_cluster_mask], marker=cluster_marker, depthshade=False)
+    for label in np.unique(labels).tolist():
+        this_cluster_mask = labels == label
+        ax.scatter(R[this_cluster_mask], G[this_cluster_mask], B[this_cluster_mask], color=colors[this_cluster_mask], depthshade=False)
 
     ax.set(xlabel='Red', ylabel='Green', zlabel='Blue', xlim=(0, 1), ylim=(0, 1))
-# plt.show()
+
+
+# TODO: This works...
+pixel_locs, colors, labels = get_kmeans_color(image.img, kmeans)
+plot_kmeans_color2(pixel_locs, colors, labels)
+plt.show()
+
+#%%
+fig = plt.figure(figsize=PAPER['A4_LANDSCAPE'], facecolor='white')
+ax = plt.axes(projection="3d")
+plot_kmeans_color(ax, image.img, kmeans)
+plt.show()
 
 #%%
 image_id = df_by_image.index[-1] # Select an image with 15 ships
+image_id = df_by_image.index[10] # Select an image with 15 ships
 image = Image(image_id)
 image.load(img_zip, df)
 image.load_ships()
@@ -83,11 +86,7 @@ plt.imshow(kmeans_image)
 plt.show()
 
 #%%
-# TODO: This works...
-fig = plt.figure(figsize=PAPER['A4_LANDSCAPE'], facecolor='white')
-ax = plt.axes(projection="3d")
-plot_kmeans_color(ax, image.img, kmeans)
-plt.show()
+
 #%%
 # TODO: This doesn't work??
 fig = plt.figure(figsize=PAPER['A4_LANDSCAPE'], facecolor='white')
@@ -126,6 +125,55 @@ for cluster_num, cluster_marker in zip(cluster_numbers, cluster_markers):
 
 ax.set(xlabel='Red', ylabel='Green', zlabel='Blue', xlim=(0, 1), ylim=(0, 1))
 plt.show()
+
+#%% OLD!!!
+
+def plot_kmeans_color(ax, img, _kmeans):
+    """asdf
+
+    :param ax: The axis to plot into
+    :param img: The orignal image
+    :param _kmeans: The FIT kmeans object
+    :return:
+    """
+
+    original_pixels = img / 255
+    new_shape = original_pixels.shape[0] * original_pixels.shape[1], original_pixels.shape[2]
+    original_pixel_locations_flat = original_pixels.reshape(new_shape)
+
+    new_pixel_colors = _kmeans.cluster_centers_[_kmeans.predict(original_pixel_locations_flat)]
+    logging.info("New pixels, shape {}".format(new_pixel_colors.shape))
+    logging.info("Colors: {}".format(np.unique(new_pixel_colors, axis=0)))
+
+    cluster_labels = np.unique(_kmeans.labels_).tolist()
+    logging.info("{} custers: {}".format(len(cluster_labels), cluster_labels))
+
+    N_points = 20000
+    # Generate a list of 20000 indices
+    rng = np.random.RandomState(0)
+    i = rng.permutation(original_pixel_locations_flat.shape[0])[:N_points]
+    logging.info("Sampling {} points".format(len(i)))
+
+
+    pixel_locations_i = original_pixel_locations_flat[i].T
+    colors_i = new_pixel_colors[i]
+    labels_i = _kmeans.labels_[i]
+    R, G, B = pixels_i
+
+    cluster_markers = ['1','+']
+
+    for cluster_name, cluster_marker in zip(cluster_labels, cluster_markers):
+        print(cluster_name, cluster_marker)
+        this_cluster_mask = labels_i == cluster_name
+
+        logging.info("Cluster {} with {} points".format(cluster_name, sum(this_cluster_mask)))
+
+        # sum(this_cluster_mask)
+
+        ax.scatter(R[this_cluster_mask], G[this_cluster_mask], B[this_cluster_mask], color=colors_i[this_cluster_mask], marker=cluster_marker, depthshade=False)
+
+    ax.set(xlabel='Red', ylabel='Green', zlabel='Blue', xlim=(0, 1), ylim=(0, 1))
+
 
 #%%
 # OLD

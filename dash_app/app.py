@@ -65,8 +65,6 @@ import pandas as pd
 from pathlib import Path
 import zipfile
 
-
-
 # %%%%%%%%%%%% LOAD IMAGE CLASS
 
 # TODO: This is just a patch for now, local dev!
@@ -79,13 +77,19 @@ print(sys.path)
 from eda_00_Image_class import Image, convert_rgb_img_to_b64string, fit_kmeans_pixels, convert_rgb_img_to_b64string_straight
 
 #%%
-from callbacks import register_callbacks
-from figures import test_fig
+try:
+    from callbacks import register_callbacks
+    from figures import test_fig
+except:
+    sys.path.append( str(Path.cwd().joinpath('dash_app')) )
+    from callbacks import register_callbacks
+    from figures import test_fig
 
 # %% General, entry point
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 # app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 assets_url_path = Path.cwd() / 'dash_app' / 'assets'
+
 assert assets_url_path.exists()
 app = dash.Dash(__name__, assets_url_path=str(assets_url_path), external_stylesheets=external_stylesheets)
 
@@ -273,13 +277,15 @@ DOM.append(
         html.Button('Perform KMeans clustering', id='button-start-kmeans'),
     ], className="section-container")
 )
+
+
 #%% Kmeans
 app.layout = html.Div(children=DOM + [
 
     html_kmeans_img_STATIC,
     # html_fig_kmeans_scatter,
 
-    html.Div([dcc.Graph(
+    html.Div(children=[dcc.Graph(
         id='kmeans-scatter',
         figure=fig_kmeans_scatter,
     )], style={'display': 'inline-block', 'width': '100%', 'height': '80%'}),
