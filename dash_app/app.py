@@ -306,7 +306,7 @@ path_image_class = Path().cwd() / 'src' / '3_EDA'
 path_image_class = path_image_class.resolve()
 sys.path.append(str(path_image_class.absolute()))
 print(sys.path)
-from eda_00 import Image, convert_rgb_img_to_b64string
+from eda_00_Image_class import Image, convert_rgb_img_to_b64string
 
 # %%%%%%%%%%%% LOAD 1 IMAGE INSTANCE
 image_id = df_by_image.index[2]  # Select an image with 15 ships
