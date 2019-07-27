@@ -174,3 +174,13 @@ def get_ellipsed_images(image_id):
         # img = imutils.draw_ellipse_and_axis(img, contour, thickness=2)
         img = imutils.fit_draw_ellipse(img, contour, thickness=2)
     return img, contours
+# %%%%%%%%%%%% CLASSES
+# %%
+def plot_hist(img, ax):
+    color = ('r', 'g', 'b')
+    for i, col in enumerate(color):
+        histr = cv2.calcHist([img], [i], None, [256], [0, 256])
+        ax.plot(histr, color=col)
+
+    # ax.get_xaxis().set_visible(False)
+    # ax.get_yaxis().set_visible(False)

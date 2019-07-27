@@ -13,7 +13,6 @@ sys.path.append(str(path_image_class.absolute()))
 print(sys.path)
 from eda_00_Image_class import Image, convert_rgb_img_to_b64string, fit_kmeans_pixels, convert_rgb_img_to_b64string_straight
 
-
 def register_callbacks(app, df, df_by_image, img_zip, Image):
 
 
