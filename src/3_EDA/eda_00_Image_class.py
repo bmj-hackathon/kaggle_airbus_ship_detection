@@ -216,14 +216,28 @@ def fit_kmeans_pixels(img, kmeans):
     # test_a = predicted_cluster[0:10]
     # test_asdf = kmeans.cluster_centers_
     # test_asdf[test_a]
-    all_new_colors = kmeans.cluster_centers_[predicted_cluster]
+    img_clustered_pixels = kmeans.cluster_centers_[predicted_cluster]
     logging.info("Assigned each pixel to a cluster (color vector).".format())
 
-    all_new_colors = all_new_colors.reshape(img.shape)
+    img_clustered_pixels = img_clustered_pixels.reshape(img.shape)
     logging.info("Reshape pixels back to original shape".format())
 
-    return all_new_colors
+    return img_clustered_pixels
 
+
+def convert_rgb_img_to_b64string_straight(img):
+    # Encode the in-memory image to .jpg format
+    retval, buffer = cv2.imencode('.jpg', img)
+
+    # Convert to base64 raw bytes
+    jpg_as_text = base64.b64encode(buffer)
+
+    # Decode the bytes to utf
+    jpg_as_text = jpg_as_text.decode(encoding="utf-8")
+
+    logging.info("Image encoded to jpg base64 string".format())
+
+    return jpg_as_text
 
 def convert_rgb_img_to_b64string(img):
     # Convert image to BGR from RGB

@@ -66,20 +66,12 @@ import pandas as pd
 from pathlib import Path
 import zipfile
 
+
 #%%
-
-# iris = px.data.iris()
-# print(go.Scatter3d)
-# print("Iris", iris)
-# trace=[go.Scatter3d(iris, x='sepal_length', y='sepal_width', z='petal_width', color='species')]
-
-t = np.linspace(0, 10, 50)
-x, y, z = np.cos(t), np.sin(t), t
-
-fig = go.Figure(data=[go.Scatter3d(x=x, y=y, z=z,
-                                   mode='markers')])
-
-
+print(sys.path)
+# import callbacks
+from callbacks import *
+# raise
 # %%%%%%%%%%%% CLASSES
 # %%
 def plot_hist(img, ax):
@@ -319,7 +311,7 @@ path_image_class = Path().cwd() / 'src' / '3_EDA'
 path_image_class = path_image_class.resolve()
 sys.path.append(str(path_image_class.absolute()))
 print(sys.path)
-from eda_00_Image_class import Image, convert_rgb_img_to_b64string
+from eda_00_Image_class import Image, convert_rgb_img_to_b64string, fit_kmeans_pixels, convert_rgb_img_to_b64string_straight
 
 # %%%%%%%%%%%% LOAD 1 IMAGE INSTANCE
 image_id = df_by_image.index[2]  # Select an image with 15 ships
@@ -347,6 +339,81 @@ jpg_base_image = convert_rgb_img_to_b64string(image.img)
 # %%%%%%%%%%%% Get ellipse image
 ndarray_ellipse_image = image.draw_ellipses_img()
 jpg_ellipse_image = convert_rgb_img_to_b64string(ndarray_ellipse_image)
+
+# %% KMeans
+
+kmeans = image.k_means(num_clusters=2)
+
+kmeans_img = fit_kmeans_pixels(image.img, kmeans)
+
+# Build an image HTML object
+kmeans_img_str = convert_rgb_img_to_b64string_straight(kmeans_img * 255)
+image_source_string = "data:image/png;base64, {}".format(kmeans_img_str)
+
+html_kmeans_img = html.Img(src=image_source_string)
+
+N_points = 20000
+
+# Generate a list of 20000 indices
+kmeans_img_flat = kmeans_img.reshape(kmeans_img.shape[0]*kmeans_img.shape[1],kmeans_img.shape[2])
+rng = np.random.RandomState(0)
+i = rng.permutation(kmeans_img_flat.shape[0])[:N_points]
+colors_i = kmeans_img_flat[i]
+labels_i = kmeans.labels_[i]
+R, G, B = kmeans_img_flat[i].T
+#
+#
+fig_kmeans_scatter = go.Figure(data=[go.Scatter3d(x=R, y=G, z=B, mode='markers')])
+fig_kmeans_scatter.update_layout(scene = dict(
+                    xaxis_title='R',
+                    yaxis_title='G',
+                    zaxis_title='B'),
+                    # width=700,
+                    margin=dict(r=20, b=10, l=10, t=10),
+                    height=500,
+)
+
+fig_kmeans_scatter.update_layout(scene = dict(
+                    xaxis = dict(
+                         backgroundcolor="rgb(255, 220, 220)",
+                         gridcolor="white",
+                         showbackground=True,
+                         zerolinecolor="white",),
+                    yaxis = dict(
+                        backgroundcolor="rgb(220, 255, 220)",
+                        gridcolor="white",
+                        showbackground=True,
+                        zerolinecolor="white"),
+                    zaxis = dict(
+                        backgroundcolor="rgb(220, 220, 255)",
+                        gridcolor="white",
+                        showbackground=True,
+                        zerolinecolor="white",),),
+                    width=700,
+                    margin=dict(
+                    r=10, l=10,
+                    b=10, t=10)
+                  )
+# html_fig_kmeans_scatter = html.Div([dcc.Graph(
+#     id='basic-interactions',
+#     figure=fig_kmeans_scatter,
+# )]),
+
+#raise
+
+# %% TEST 3D scatter
+
+# iris = px.data.iris()
+# print(go.Scatter3d)
+# print("Iris", iris)
+# trace=[go.Scatter3d(iris, x='sepal_length', y='sepal_width', z='petal_width', color='species')]
+
+t = np.linspace(0, 10, 50)
+x, y, z = np.cos(t), np.sin(t), t
+
+fig = go.Figure(data=[go.Scatter3d(x=x, y=y, z=z,
+                                   mode='markers')])
+
 
 # %%%%%%%%%%%% DASH
 
@@ -476,182 +543,26 @@ app.layout = html.Div(children=[
 
     ###### SECTION: TESTING GRAPHS
 
-    html.Div(),
+    # html.Div(),
 
-    html.Div([
-        html.Div([dcc.Graph(id="my-graph")])
-    ], className="container"),
+    # html.Div([
+    #     html.Div([dcc.Graph(id="my-graph")])
+    # ], className="container"),
+
+    # html.Div([dcc.Graph(
+    #     id='basic-interactions',
+    #     figure=fig,
+    # )]),
+
+    html_kmeans_img,
+    # html_fig_kmeans_scatter,
 
     html.Div([dcc.Graph(
-        id='basic-interactions',
-        figure=fig,
-    )]),
-
+        id='kmeans-scatter',
+        figure=fig_kmeans_scatter,
+    )], style={'display': 'inline-block', 'width': '100%', 'height': '80%'}),
 ])
 
-
-
-# %%-----------------
-# Get the ship number
-# --------------------
-
-# TODO: NOTE: The return values are mapped 1:1 in the list of Outputs!
-@app.callback(
-    # dash.dependencies.Output('dropdown-ship-id', 'options'),
-    [
-        dash.dependencies.Output('text-ship-count', 'children'),
-        dash.dependencies.Output('text-ship-count2', 'children'),
-    ],
-    [dash.dependencies.Input('slider-ship-num', 'value')]
-)  # END DECORATOR
-def update_output(value):
-    images = df_by_image.loc[df_by_image['TotalShips'] == value].index.to_series()
-    images_sample = images.sample(10)
-
-    dropdown_options = [{'label': id, 'value': id} for id in images_sample]
-    # dropdown_options = [{'label': id, 'value': id} for id in images.sample(10)]
-
-    # slider_marks = {i+1 : '{}'.format(img_id.split('.')[0]) for i, img_id in enumerate(images_sample)}
-    # slider_marks = {img_id : '{}'.format(img_id.split('.')[0]) for i, img_id in enumerate(images_sample)}
-    # slider_marks = {n: '{}'.format(n) for n in range(10)}
-    # print(slider_marks)
-    # return dropdown_options, len(images)
-    return len(images), value
-    # return "{} images have {} ships".format(len(images), value)
-
-
-# %%-----------------
-# Get the image ID from the slider
-# BROKEN
-# --------------------
-if 0:
-    @app.callback(
-        dash.dependencies.Output('image_id', 'children'),
-        [dash.dependencies.Input('slider-ship-id', 'value')]
-    )  # END DECORATOR
-    def update_image_id_slider(value):
-        return value
-
-
-# %%-----------------
-# Get a random image ID
-# --------------------
-@app.callback(
-    dash.dependencies.Output('image_id', 'children'),
-    [dash.dependencies.Input('button-get-random', 'n_clicks'),
-     dash.dependencies.Input('slider-ship-num', 'value')]
-)  # END DECORATOR
-def button_random(n_clicks, value):
-    images = df_by_image.loc[df_by_image['TotalShips'] == value]
-    selected_id = images.sample().index[0]
-    print("Selected {} from {} images (TotalShips = {})".format(selected_id, len(images), value))
-    return selected_id
-
-
-# %%-----------------
-# Get the image ID from the dropdown
-# --------------------
-# @app.callback(
-#     dash.dependencies.Output('image_id', 'children'),
-#     [dash.dependencies.Input('dropdown-ship-id', 'value')]
-# )  # END DECORATOR
-# def update_image_id_dropdown(value):
-#     return value
-
-# %%-----------------
-# Build the summary table and the image
-# --------------------
-@app.callback(
-    [
-        dash.dependencies.Output('ship-data-table', 'data'),
-        dash.dependencies.Output('base-ship-image', 'src'),
-    ],
-    [dash.dependencies.Input('image_id', 'children')]
-)
-def get_image_data(image_id):
-    # Instantiate the image object
-    # print("Getting image number {}".format(image_id_index_number))
-    # image_id = df.iloc[image_id_index_number, :].index
-    # print("image_id=",image_id)
-    image = Image(image_id)
-    image.load(img_zip, df_test)
-    print("GET IMAGE DATA,  num_ships = ", image.num_ships)
-    if not image.num_ships:
-        jpg_ellipse_image = convert_rgb_img_to_b64string(image.img)
-        image_source_string = "data:image/png;base64, {}".format(jpg_ellipse_image)
-        empty_data = [{'ship': 'None', 'index_number': 'n/a', 'x': 'n/a', 'y': 'n/a', 'area': 'n/a', 'angle': 'n/a'}]
-        return empty_data, image_source_string
-
-    image.load_ships()
-
-    # Build summary table
-    df_ships = image.ship_summary_table()
-
-    # Get ellipse image
-    ndarray_ellipse_image = image.draw_ellipses_img()
-    jpg_ellipse_image = convert_rgb_img_to_b64string(ndarray_ellipse_image)
-    image_source_string = "data:image/png;base64, {}".format(jpg_ellipse_image)
-    data = df_ships.to_dict('records')
-    # print(data)
-    return data, image_source_string
-
-
-# %%-----------------
-# K Means button
-# --------------------
-if 0:
-    @app.callback(
-        dash.dependencies.Output('empty-para', 'children'),
-        [dash.dependencies.Input('button-start-kmeans', 'n_clicks'),
-         dash.dependencies.Input('slider-cluster-counts', 'value'),
-         dash.dependencies.Input('image_id', 'children')]
-    )  # END DECORATOR
-    def button_random(n_clicks, n_clusters, image_id):
-        print("K Means with {} clusters on image {}".format(n_clusters, image_id))
-
-        image = Image(image_id)
-        image.load(img_zip, df_test)
-        kmeans = image.k_means(n_clusters)
-
-        data = image.img / 255
-        data = data.reshape(data.shape[0] * data.shape[1], data.shape[2])
-
-        logging.info("Fit {} pixels {} clusters".format(data.shape[0], n_clusters))
-        unique, counts = np.unique(kmeans.labels_, return_counts=True)
-        # for c_name, c_count, c_position in zip(unique, counts, kmeans.cluster_centers_):
-        #     logging.info("\tCluster {} at {} with {:0.1%} of the pixels".format(c_name, np.around(c_position, 3),
-        #                                                                         c_count / data.shape[0])),
-        #
-        # if len(unique) == 2:
-        #     dist = np.linalg.norm(kmeans.cluster_centers_[0] - kmeans.cluster_centers_[1])
-        #     logging.info("Distance between c1 and c2: {}".format(dist))
-
-        # images = df_by_image.loc[df_by_image['TotalShips'] == value]
-        # selected_id = images.sample().index[0]
-        # print("Selected {} from {} images (TotalShips = {})".format(selected_id, len(images), value))
-        # return selected_id
-
-
-# %% TESTING GRAPH
-
-
-# https://github.com/plotly/simple-example-chart-apps/blob/master/dash-3dscatterplot/apps/main.py
-@app.callback(
-    dash.dependencies.Output("my-graph", "figure"),
-    []
-)
-def update_figure(selected_x, selected_y, selected_z):
-    iris = px.data.iris()
-    trace = [go.Scatter3d(iris, x='sepal_length', y='sepal_width', z='petal_width', color='species')]
-    return {"data": trace,
-            "layout": go.Layout(
-                height=700, title=f"TITLE HERE",
-                paper_bgcolor="#f3f3f3",
-                scene={"aspectmode": "cube",
-                       "xaxis": {"title": f"X", },
-                       "yaxis": {"title": f"Y", },
-                       "zaxis": {"title": f"Z", }})
-            }
 
 
 # %% General, entry point
@@ -663,38 +574,3 @@ app.css.append_css({
 if __name__ == '__main__':
     app.run_server(debug=True)
 
-
-# %% OLD
-def gen_2_cols_OBSELETE():
-    # 2 columns, data table | base ellipse image
-    html.Div([
-        html.Div([
-            html.H3('Ship data OLD'),
-            dash_table.DataTable(
-                id='table',
-                columns=[{"name": i, "id": i} for i in df_ships.columns],
-                data=df_ships.to_dict('records'),
-            ),
-        ], className="six columns"),
-        html.Div([
-            html.H3('Image'),
-            html.Img(src="data:image/png;base64, {}".format(jpg_ellipse_image))
-        ], className="six columns")
-    ], className="row"),
-
-    html.H3(children='TEST H3'),
-    html.Div(children=[
-        html.H2(children="image {}".format(image.image_id)),
-    ]),
-
-
-def gen_slider_OBSELETE():
-    return dcc.Slider(
-        id='slider-ship-id',
-        className='slider',
-        min=1,
-        max=10,
-        step=1,
-        # value=1,
-        # marks={n: '{}'.format(n) for n in range(10)},
-    )
