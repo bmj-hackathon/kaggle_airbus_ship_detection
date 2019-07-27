@@ -63,7 +63,7 @@ def plot_kmeans_color(ax, img, kmeans):
 # plt.show()
 
 #%%
-image_id = df_by_image.index[2] # Select an image with 15 ships
+image_id = df_by_image.index[-1] # Select an image with 15 ships
 image = Image(image_id)
 image.load(img_zip, df)
 image.load_ships()
@@ -71,6 +71,12 @@ r = image.records
 
 image.ship_summary_table()
 kmeans = image.k_means(num_clusters=2)
+
+#%%
+plt.imshow(image.img)
+plt.show()
+
+#%%
 
 kmeans_image = fit_kmeans_pixels(image.img, kmeans)
 plt.imshow(kmeans_image)

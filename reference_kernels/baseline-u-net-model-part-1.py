@@ -484,6 +484,7 @@ def show_loss(loss_history):
     ax4.set_title('DICE')
 
 show_loss(loss_history)
+plt.show()
 
 # %% {"_uuid": "ce1167e9f09200f537e61f93f486168a13be1711"}
 seg_model.load_weights(weight_path)
@@ -493,17 +494,17 @@ seg_model.save('seg_model.h5')
 pred_y = seg_model.predict(valid_x)
 print(pred_y.shape, pred_y.min(), pred_y.max(), pred_y.mean())
 
-# %% {"_uuid": "6a4fd2ca0cf47ba069a314356bf74c7b531c56ac"}
+# %%
 fig, ax = plt.subplots(1, 1, figsize = (10, 10))
 ax.hist(pred_y.ravel(), np.linspace(0, 1, 10))
 ax.set_xlim(0, 1)
 ax.set_yscale('log', nonposy='clip')
 
-# %% [markdown] {"_uuid": "0018ab172d18936f8cc2c5df33d2f840dc16bf4f"}
+# %% [markdown]
 # # Prepare Full Resolution Model
 # Here we account for the scaling so everything can happen in the model itself
 
-# %% {"_uuid": "17408f0ee8dc16149b8eff0447a1427ab3ed82ba"}
+# %%
 if IMG_SCALING is not None:
     fullres_model = models.Sequential()
     fullres_model.add(layers.AvgPool2D(IMG_SCALING, input_shape = (None, None, 3)))
@@ -513,14 +514,14 @@ else:
     fullres_model = seg_model
 fullres_model.save('fullres_model.h5')
 
-# %% [markdown] {"_uuid": "17edb177402ae51651692511827a7e9d60646533"}
+# %% [markdown]
 # # Run the test data
 
-# %% {"_uuid": "4911811f267f9f3397a58902da9e75c6f261ad40"}
+# %%
 test_paths = os.listdir(test_image_dir)
 print(len(test_paths), 'test images found')
 
-# %% {"_uuid": "73ef7b3b2a74bf64968c79b4005075d4f0e23143"}
+# %%
 fig, m_axs = plt.subplots(20, 2, figsize = (10, 40))
 [c_ax.axis('off') for c_ax in m_axs.flatten()]
 for (ax1, ax2), c_img_name in zip(m_axs, test_paths):

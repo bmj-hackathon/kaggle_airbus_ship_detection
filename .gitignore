@@ -87,3 +87,4 @@ target/
 input/**/*
 input
 kernel_submission/
+**/weights/**/*
