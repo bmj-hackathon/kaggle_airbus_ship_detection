@@ -21,7 +21,6 @@ opencv-python = "*"
 scikit-image = "*"
 tensorflow-gpu = "==1.12"
 pillow = "*"
-imutils = {editable = true,path = "/home/batman/kaggle/imutils"}
 dash = "*"
 dash-daq = "*"
 numpy = "*"
