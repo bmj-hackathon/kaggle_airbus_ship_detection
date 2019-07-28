@@ -74,7 +74,7 @@ path_image_class = Path().cwd() / 'src' / '3_EDA'
 path_image_class = path_image_class.resolve()
 sys.path.append(str(path_image_class.absolute()))
 print(sys.path)
-from eda_00_Image_class import Image, convert_rgb_img_to_b64string, fit_kmeans_pixels, convert_rgb_img_to_b64string_straight
+from eda_00_Image_class import Image, convert_rgb_img_to_b64string, fit_kmeans_pixels, convert_rgb_img_to_b64string_straight, get_kmeans_color
 
 #%%
 try:
@@ -137,10 +137,10 @@ image = Image(image_id)
 image.load(img_zip, df_test)
 image.load_ships()
 
-# %% KMeans
-
+#%% Perform KMeans
 kmeans = image.k_means(num_clusters=2)
 
+#%% KMeans image
 kmeans_img = fit_kmeans_pixels(image.img, kmeans)
 
 # Build an image HTML object
@@ -149,57 +149,64 @@ image_source_string = "data:image/png;base64, {}".format(kmeans_img_str)
 
 html_kmeans_img_STATIC = html.Img(src=image_source_string)
 
-N_points = 20000
+# %% KMeans figure
+def get_kmeans_figure(image, kmeans):
+    pixel_locs, colors, labels = get_kmeans_color(image.img, kmeans)
+    R, G, B = pixel_locs.T
 
-# Generate a list of 20000 indices
-kmeans_img_flat = kmeans_img.reshape(kmeans_img.shape[0]*kmeans_img.shape[1],kmeans_img.shape[2])
-rng = np.random.RandomState(0)
-i = rng.permutation(kmeans_img_flat.shape[0])[:N_points]
-colors_i = kmeans_img_flat[i]
-labels_i = kmeans.labels_[i]
-R, G, B = kmeans_img_flat[i].T
-#
-#
-fig_kmeans_scatter = go.Figure(data=[go.Scatter3d(x=R, y=G, z=B, mode='markers')])
-fig_kmeans_scatter.update_layout(scene = dict(
-                    xaxis_title='R',
-                    yaxis_title='G',
-                    zaxis_title='B'),
-                    # width=700,
-                    margin=dict(r=20, b=10, l=10, t=10),
-                    height=500,
-)
+    fig = go.Figure()
 
-fig_kmeans_scatter.update_layout(scene = dict(
-                    xaxis = dict(
-                         backgroundcolor="rgb(255, 220, 220)",
-                         gridcolor="white",
-                         showbackground=True,
-                         zerolinecolor="white",),
-                    yaxis = dict(
-                        backgroundcolor="rgb(220, 255, 220)",
-                        gridcolor="white",
-                        showbackground=True,
-                        zerolinecolor="white"),
-                    zaxis = dict(
-                        backgroundcolor="rgb(220, 220, 255)",
-                        gridcolor="white",
-                        showbackground=True,
-                        zerolinecolor="white",),),
-                    width=700,
-                    margin=dict(
-                    r=10, l=10,
-                    b=10, t=10)
-                  )
-# html_fig_kmeans_scatter = html.Div([dcc.Graph(
-#     id='basic-interactions',
-#     figure=fig_kmeans_scatter,
-# )]),
+    for label in np.unique(labels).tolist():
+        this_cluster_mask = labels == label
+        these_colors = np.unique(colors[this_cluster_mask])
+        these_colors = these_colors * 255
+        these_colors = these_colors.astype(int).tolist()
+        this_color_string = "rgb({},{},{})".format(these_colors[0], these_colors[2], these_colors[2])
+        logging.info("Label {} with {} color {}".format(label, np.sum(this_cluster_mask), this_color_string))
 
-#raise
+        cluster_string = "Cluster {}, {:0.1%}".format(label, np.sum(this_cluster_mask) / len(this_cluster_mask))
 
+        markers = dict(color=this_color_string, size=2)
+        # markers = dict( color=[f'rgb({np.random.randint(0, 256)}, {np.random.randint(0, 256)}, {np.random.randint(0, 256)})' for _ in range(25)], size=10)
+        fig.add_trace(go.Scatter3d(
+            x=R[this_cluster_mask], y=G[this_cluster_mask], z=B[this_cluster_mask],
+            mode='markers',
+            marker=markers,
+            name=cluster_string,
+        ))
 
+    # ax.set(xlabel='Red', ylabel='Green', zlabel='Blue', xlim=(0, 1), ylim=(0, 1))
+    bg_color = "rgb(230,230,230)"
+    fig.update_layout(scene=dict(
+        xaxis=dict(
+            # backgroundcolor="rgb(255, 220, 220)",
+            backgroundcolor=bg_color,
+            gridcolor="white",
+            showbackground=True,
+            zerolinecolor="white", ),
+        yaxis=dict(
+            # backgroundcolor="rgb(220, 255, 220)",
+            backgroundcolor=bg_color,
+            gridcolor="white",
+            showbackground=True,
+            zerolinecolor="white"),
+        zaxis=dict(
+            # backgroundcolor="rgb(220, 220, 255)",
+            backgroundcolor=bg_color,
+            gridcolor="white",
+            showbackground=True,
+            zerolinecolor="white", ),
+        xaxis_title='Red',
+        yaxis_title='Green',
+        zaxis_title='Blue',
+        ),
+    )
+    fig.update_layout(
+        margin=dict(l=20, r=20, t=20, b=20),
+    height=800)
+    return fig
 
+fig_kmeans_scatter = get_kmeans_figure(image, kmeans)
 
 # %%%%%%%%%%%% DASH
 MAX_SHIPS = 15
@@ -278,17 +285,23 @@ DOM.append(
     ], className="section-container")
 )
 
+#%% Kmeans Image and Scatter
+DOM.append(
+    html.Div([
+        html.Div(children=[dcc.Graph(
+            id='kmeans-scatter',
+            figure=fig_kmeans_scatter,
+        )], className="six columns"),
+        html.Div([
+            html_kmeans_img_STATIC,
+        ], className="six columns"),
+    ], className="row")
+)
+
 
 #%% Kmeans
 app.layout = html.Div(children=DOM + [
 
-    html_kmeans_img_STATIC,
-    # html_fig_kmeans_scatter,
-
-    html.Div(children=[dcc.Graph(
-        id='kmeans-scatter',
-        figure=fig_kmeans_scatter,
-    )], style={'display': 'inline-block', 'width': '100%', 'height': '80%'}),
 ])
 
 

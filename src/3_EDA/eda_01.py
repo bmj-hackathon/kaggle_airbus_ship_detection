@@ -53,10 +53,7 @@ def plot_kmeans_color2(pixel_locs, colors, labels):
     ax.set(xlabel='Red', ylabel='Green', zlabel='Blue', xlim=(0, 1), ylim=(0, 1))
 
 
-# TODO: This works...
-pixel_locs, colors, labels = get_kmeans_color(image.img, kmeans)
-plot_kmeans_color2(pixel_locs, colors, labels)
-plt.show()
+
 
 #%%
 fig = plt.figure(figsize=PAPER['A4_LANDSCAPE'], facecolor='white')
@@ -65,8 +62,8 @@ plot_kmeans_color(ax, image.img, kmeans)
 plt.show()
 
 #%%
-image_id = df_by_image.index[-1] # Select an image with 15 ships
-image_id = df_by_image.index[10] # Select an image with 15 ships
+image_id = df_by_image.index[100] # Select an image with 15 ships
+# image_id = df_by_image.index[10] # Select an image with 15 ships
 image = Image(image_id)
 image.load(img_zip, df)
 image.load_ships()
@@ -76,6 +73,7 @@ image.ship_summary_table()
 kmeans = image.k_means(num_clusters=2)
 
 #%%
+fig = plt.figure(figsize=PAPER['A4_LANDSCAPE'], facecolor='white')
 plt.imshow(image.img)
 plt.show()
 
@@ -85,6 +83,12 @@ kmeans_image = fit_kmeans_pixels(image.img, kmeans)
 plt.imshow(kmeans_image)
 plt.show()
 
+#%%
+
+# TODO: This works...
+pixel_locs, colors, labels = get_kmeans_color(image.img, kmeans)
+plot_kmeans_color2(pixel_locs, colors, labels)
+plt.show()
 #%%
 
 #%%
