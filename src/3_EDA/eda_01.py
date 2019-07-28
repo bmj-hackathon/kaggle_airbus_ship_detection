@@ -58,6 +58,19 @@ def plot_kmeans_color2(pixel_locs, colors, labels):
 #%%
 fig = plt.figure(figsize=PAPER['A4_LANDSCAPE'], facecolor='white')
 ax = plt.axes(projection="3d")
+
+def plot_kmeans_color2(pixel_locs, colors, labels):
+    fig = plt.figure(figsize=PAPER['A4_LANDSCAPE'], facecolor='white')
+    ax = plt.axes(projection="3d")
+    R, G, B = pixel_locs.T
+
+    for label in np.unique(labels).tolist():
+        this_cluster_mask = labels == label
+        ax.scatter(R[this_cluster_mask], G[this_cluster_mask], B[this_cluster_mask], color=colors[this_cluster_mask], depthshade=False)
+
+    ax.set(xlabel='Red', ylabel='Green', zlabel='Blue', xlim=(0, 1), ylim=(0, 1))
+
+
 plot_kmeans_color(ax, image.img, kmeans)
 plt.show()
 
@@ -80,6 +93,7 @@ plt.show()
 #%%
 
 kmeans_image = fit_kmeans_pixels(image.img, kmeans)
+print(kmeans_image)
 plt.imshow(kmeans_image)
 plt.show()
 

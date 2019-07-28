@@ -122,7 +122,8 @@ def register_callbacks(app, df, df_by_image, img_zip, Image):
         print("Original Image:")
         print(ndarray_ellipse_image)
         print('ndarray_ellipse_image', ndarray_ellipse_image.shape)
-        jpg_ellipse_image = convert_rgb_img_to_b64string(ndarray_ellipse_image)
+        # jpg_ellipse_image = convert_rgb_img_to_b64string(ndarray_ellipse_image)
+        jpg_ellipse_image = convert_rgb_img_to_b64string_straight(ndarray_ellipse_image)
         image_source_string = "data:image/png;base64, {}".format(jpg_ellipse_image)
         col_heads = [{"name": i, "id": i} for i in df_ships.columns]
         # print(col_heads)
@@ -176,6 +177,10 @@ def register_callbacks(app, df, df_by_image, img_zip, Image):
         kmeans_img_canvas = kmeans_img
         kmeans_img_canvas = kmeans_img * 255
         kmeans_img_canvas = kmeans_img_canvas.astype(int)
+
+
+        # kmeans_img_canvas = kmeans_img
+
 
 
         # print("KMEANS IMAGE CANVAS:")
