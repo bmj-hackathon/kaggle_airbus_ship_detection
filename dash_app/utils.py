@@ -1,4 +1,7 @@
 # %%
+import plotly.graph_objs as go
+import numpy as np
+import logging
 
 def create_plot(x, y, z, size, color, name, xlabel="LogP", ylabel="pkA", zlabel="Solubility (mg/ml)",
                 plot_type="scatter3d", markers=[], ):
@@ -184,3 +187,111 @@ def plot_hist(img, ax):
 
     # ax.get_xaxis().set_visible(False)
     # ax.get_yaxis().set_visible(False)
+
+#%%
+# TODO: THIS FUNCTION IS DOUBLED HERE! FROM eda_00.py!
+def get_kmeans_color(img, _kmeans):
+    """asdf
+
+    :param ax: The axis to plot into
+    :param img: The orignal image
+    :param _kmeans: The FIT kmeans object
+    :return:
+    """
+
+    original_pixels = img / 255
+    new_shape = original_pixels.shape[0] * original_pixels.shape[1], original_pixels.shape[2]
+    original_pixel_locations_flat = original_pixels.reshape(new_shape)
+
+    new_pixel_colors = _kmeans.cluster_centers_[_kmeans.predict(original_pixel_locations_flat)]
+    logging.info("New pixels, shape {}".format(new_pixel_colors.shape))
+    logging.info("Colors: {}".format(np.unique(new_pixel_colors, axis=0)))
+
+    cluster_labels = np.unique(_kmeans.labels_).tolist()
+    logging.info("{} custers: {}".format(len(cluster_labels), cluster_labels))
+
+    N_points = 20000
+    # Generate a list of 20000 indices
+    rng = np.random.RandomState(0)
+    i = rng.permutation(original_pixel_locations_flat.shape[0])[:N_points]
+    logging.info("Sampling {} points".format(len(i)))
+
+    pixel_locations = original_pixel_locations_flat[i]
+    logging.info("Returning pixel locations: {}".format(pixel_locations.shape))
+    color_vec_i = new_pixel_colors[i]
+    logging.info("Returning colors: {}".format(color_vec_i.shape))
+    labels_vec_i = _kmeans.labels_[i]
+    logging.info("Returning labels: {}".format(labels_vec_i))
+
+    return pixel_locations, color_vec_i, labels_vec_i
+
+def plot_kmeans_color2(pixel_locs, colors, labels):
+    fig = plt.figure(figsize=PAPER['A4_LANDSCAPE'], facecolor='white')
+    ax = plt.axes(projection="3d")
+    R, G, B = pixel_locs.T
+
+    for label in np.unique(labels).tolist():
+        this_cluster_mask = labels == label
+        ax.scatter(R[this_cluster_mask], G[this_cluster_mask], B[this_cluster_mask], color=colors[this_cluster_mask], depthshade=False)
+
+    ax.set(xlabel='Red', ylabel='Green', zlabel='Blue', xlim=(0, 1), ylim=(0, 1))
+
+
+
+
+# %% KMeans figure
+def get_kmeans_figure(image, kmeans):
+    pixel_locs, colors, labels = get_kmeans_color(image.img, kmeans)
+    R, G, B = pixel_locs.T
+
+    fig = go.Figure()
+
+    for label in np.unique(labels).tolist():
+        this_cluster_mask = labels == label
+        these_colors = np.unique(colors[this_cluster_mask])
+        these_colors = these_colors * 255
+        these_colors = these_colors.astype(int).tolist()
+        this_color_string = "rgb({},{},{})".format(these_colors[0], these_colors[2], these_colors[2])
+        logging.info("Label {} with {} color {}".format(label, np.sum(this_cluster_mask), this_color_string))
+
+        cluster_string = "Cluster {}, {:0.1%}".format(label, np.sum(this_cluster_mask) / len(this_cluster_mask))
+
+        markers = dict(color=this_color_string, size=2)
+        # markers = dict( color=[f'rgb({np.random.randint(0, 256)}, {np.random.randint(0, 256)}, {np.random.randint(0, 256)})' for _ in range(25)], size=10)
+        fig.add_trace(go.Scatter3d(
+            x=R[this_cluster_mask], y=G[this_cluster_mask], z=B[this_cluster_mask],
+            mode='markers',
+            marker=markers,
+            name=cluster_string,
+        ))
+
+    # ax.set(xlabel='Red', ylabel='Green', zlabel='Blue', xlim=(0, 1), ylim=(0, 1))
+    bg_color = "rgb(230,230,230)"
+    fig.update_layout(scene=dict(
+        xaxis=dict(
+            # backgroundcolor="rgb(255, 220, 220)",
+            backgroundcolor=bg_color,
+            gridcolor="white",
+            showbackground=True,
+            zerolinecolor="white", ),
+        yaxis=dict(
+            # backgroundcolor="rgb(220, 255, 220)",
+            backgroundcolor=bg_color,
+            gridcolor="white",
+            showbackground=True,
+            zerolinecolor="white"),
+        zaxis=dict(
+            # backgroundcolor="rgb(220, 220, 255)",
+            backgroundcolor=bg_color,
+            gridcolor="white",
+            showbackground=True,
+            zerolinecolor="white", ),
+        xaxis_title='Red',
+        yaxis_title='Green',
+        zaxis_title='Blue',
+        ),
+    )
+    fig.update_layout(
+        margin=dict(l=20, r=20, t=20, b=20),
+    height=800)
+    return fig

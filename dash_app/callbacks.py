@@ -1,6 +1,9 @@
 import dash
 from utils import *
 from pathlib import Path
+import logging
+import numpy as np
+import dash_html_components as html
 
 # %%%%%%%%%%%% LOAD IMAGE CLASS
 
@@ -125,40 +128,61 @@ def register_callbacks(app, df, df_by_image, img_zip, Image):
         return col_heads, data, image_source_string
 
 
-    # %%-----------------
+    #%%-----------------
     # K Means button
     # --------------------
-    if 0:
-        @app.callback(
+    # if 0:
+    @app.callback(
+        [
             dash.dependencies.Output('empty-para', 'children'),
-            [dash.dependencies.Input('button-start-kmeans', 'n_clicks'),
-             dash.dependencies.Input('slider-cluster-counts', 'value'),
-             dash.dependencies.Input('image_id', 'children')]
-        )  # END DECORATOR
-        def button_random(n_clicks, n_clusters, image_id):
-            print("K Means with {} clusters on image {}".format(n_clusters, image_id))
+            dash.dependencies.Output('kmeans-picture-LIVE', 'src'),
+            dash.dependencies.Output('kmeans-scatter-LIVE', 'figure'),
+            dash.dependencies.Output('kmeans-summary-string', 'children'),
+        ],
 
-            image = Image(image_id)
-            image.load(img_zip, df_test)
-            kmeans = image.k_means(n_clusters)
+        [dash.dependencies.Input('button-start-kmeans', 'n_clicks'),
+         # dash.dependencies.Input('slider-cluster-counts', 'value'),
+         # dash.dependencies.Input('image_id', 'children')
+         ],
 
-            data = image.img / 255
-            data = data.reshape(data.shape[0] * data.shape[1], data.shape[2])
+        [
+            dash.dependencies.State('slider-cluster-counts', 'value'),
+            dash.dependencies.State('image_id', 'children'),
+        ]
 
-            logging.info("Fit {} pixels {} clusters".format(data.shape[0], n_clusters))
-            unique, counts = np.unique(kmeans.labels_, return_counts=True)
-            # for c_name, c_count, c_position in zip(unique, counts, kmeans.cluster_centers_):
-            #     logging.info("\tCluster {} at {} with {:0.1%} of the pixels".format(c_name, np.around(c_position, 3),
-            #                                                                         c_count / data.shape[0])),
-            #
-            # if len(unique) == 2:
-            #     dist = np.linalg.norm(kmeans.cluster_centers_[0] - kmeans.cluster_centers_[1])
-            #     logging.info("Distance between c1 and c2: {}".format(dist))
 
-            # images = df_by_image.loc[df_by_image['TotalShips'] == value]
-            # selected_id = images.sample().index[0]
-            # print("Selected {} from {} images (TotalShips = {})".format(selected_id, len(images), value))
-            # return selected_id
+
+    )  # END DECORATOR
+    def button_random(n_clicks, n_clusters, image_id):
+        print("START K Means with {} clusters on image {}".format(n_clusters, image_id))
+
+        image = Image(image_id)
+        image.load(img_zip, df)
+        kmeans = image.k_means(n_clusters)
+
+        data = image.img / 255
+        data = data.reshape(data.shape[0] * data.shape[1], data.shape[2])
+
+        logging.info("Fit {} pixels {} clusters".format(data.shape[0], n_clusters))
+
+        # Get the image
+        kmeans_img = fit_kmeans_pixels(image.img, kmeans)
+        kmeans_img_canvas = kmeans_img * 255
+        kmeans_img_canvas = kmeans_img_canvas.astype(int)
+
+
+        # print("KMEANS IMAGE CANVAS:")
+        # print(kmeans_img_canvas)
+        # Build an image HTML object
+        kmeans_img_str = convert_rgb_img_to_b64string_straight(kmeans_img_canvas)
+        image_source_string = "data:image/png;base64, {}".format(kmeans_img_str)
+        html_kmeans_img_STATIC = html.Img(src=image_source_string)
+
+        # Build the scatter plot
+        fig = get_kmeans_figure(image, kmeans)
+
+
+        return None, image_source_string, fig, "TEST STRING"
 
 
     # %% TESTING GRAPH

@@ -221,7 +221,8 @@ def fit_kmeans_pixels(img, kmeans):
 
     img_clustered_pixels = img_clustered_pixels.reshape(img.shape)
     logging.info("Reshape pixels back to original shape".format())
-
+    logging.info("Returning KMeans fit image canvas".format())
+    # img_clustered_pixels
     return img_clustered_pixels
 
 

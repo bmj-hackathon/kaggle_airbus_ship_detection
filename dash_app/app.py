@@ -76,6 +76,8 @@ sys.path.append(str(path_image_class.absolute()))
 print(sys.path)
 from eda_00_Image_class import Image, convert_rgb_img_to_b64string, fit_kmeans_pixels, convert_rgb_img_to_b64string_straight, get_kmeans_color
 
+# %% UTILS
+from utils import *
 #%%
 try:
     from callbacks import register_callbacks
@@ -132,81 +134,27 @@ df_test['index_number'] = range(0, len(df_test))
 df_sample = df_test.head()
 
 # %%%%%%%%%%%% LOAD 1 IMAGE INSTANCE
-image_id = df_by_image.index[2]  # Select an image with 15 ships
-image = Image(image_id)
-image.load(img_zip, df_test)
-image.load_ships()
+if 0:
+    image_id = df_by_image.index[2]  # Select an image with 15 ships
+    image = Image(image_id)
+    image.load(img_zip, df_test)
+    image.load_ships()
 
 #%% Perform KMeans
-kmeans = image.k_means(num_clusters=2)
+if 0:
+    kmeans = image.k_means(num_clusters=2)
 
 #%% KMeans image
-kmeans_img = fit_kmeans_pixels(image.img, kmeans)
+if 0:
+    kmeans_img = fit_kmeans_pixels(image.img, kmeans)
 
-# Build an image HTML object
-kmeans_img_str = convert_rgb_img_to_b64string_straight(kmeans_img * 255)
-image_source_string = "data:image/png;base64, {}".format(kmeans_img_str)
+    # Build an image HTML object
+    kmeans_img_str = convert_rgb_img_to_b64string_straight(kmeans_img * 255)
+    image_source_string = "data:image/png;base64, {}".format(kmeans_img_str)
 
-html_kmeans_img_STATIC = html.Img(src=image_source_string)
+    html_kmeans_img_STATIC = html.Img(src=image_source_string)
 
-# %% KMeans figure
-def get_kmeans_figure(image, kmeans):
-    pixel_locs, colors, labels = get_kmeans_color(image.img, kmeans)
-    R, G, B = pixel_locs.T
-
-    fig = go.Figure()
-
-    for label in np.unique(labels).tolist():
-        this_cluster_mask = labels == label
-        these_colors = np.unique(colors[this_cluster_mask])
-        these_colors = these_colors * 255
-        these_colors = these_colors.astype(int).tolist()
-        this_color_string = "rgb({},{},{})".format(these_colors[0], these_colors[2], these_colors[2])
-        logging.info("Label {} with {} color {}".format(label, np.sum(this_cluster_mask), this_color_string))
-
-        cluster_string = "Cluster {}, {:0.1%}".format(label, np.sum(this_cluster_mask) / len(this_cluster_mask))
-
-        markers = dict(color=this_color_string, size=2)
-        # markers = dict( color=[f'rgb({np.random.randint(0, 256)}, {np.random.randint(0, 256)}, {np.random.randint(0, 256)})' for _ in range(25)], size=10)
-        fig.add_trace(go.Scatter3d(
-            x=R[this_cluster_mask], y=G[this_cluster_mask], z=B[this_cluster_mask],
-            mode='markers',
-            marker=markers,
-            name=cluster_string,
-        ))
-
-    # ax.set(xlabel='Red', ylabel='Green', zlabel='Blue', xlim=(0, 1), ylim=(0, 1))
-    bg_color = "rgb(230,230,230)"
-    fig.update_layout(scene=dict(
-        xaxis=dict(
-            # backgroundcolor="rgb(255, 220, 220)",
-            backgroundcolor=bg_color,
-            gridcolor="white",
-            showbackground=True,
-            zerolinecolor="white", ),
-        yaxis=dict(
-            # backgroundcolor="rgb(220, 255, 220)",
-            backgroundcolor=bg_color,
-            gridcolor="white",
-            showbackground=True,
-            zerolinecolor="white"),
-        zaxis=dict(
-            # backgroundcolor="rgb(220, 220, 255)",
-            backgroundcolor=bg_color,
-            gridcolor="white",
-            showbackground=True,
-            zerolinecolor="white", ),
-        xaxis_title='Red',
-        yaxis_title='Green',
-        zaxis_title='Blue',
-        ),
-    )
-    fig.update_layout(
-        margin=dict(l=20, r=20, t=20, b=20),
-    height=800)
-    return fig
-
-fig_kmeans_scatter = get_kmeans_figure(image, kmeans)
+    fig_kmeans_scatter = get_kmeans_figure(image, kmeans)
 
 # %%%%%%%%%%%% DASH
 MAX_SHIPS = 15
@@ -266,7 +214,8 @@ DOM.append(
     ], className="row")
 )
 
-# Section: Kmeans Cluster Select
+
+#%% Section: Kmeans Cluster Select
 DOM.append(
     html.Div([
         html.H2("K-Means segmentation "),
@@ -285,18 +234,34 @@ DOM.append(
     ], className="section-container")
 )
 
-#%% Kmeans Image and Scatter
+#%% Kmeans Image and Scatter LIVE
 DOM.append(
     html.Div([
+        html.Div([html.P(id='kmeans-summary-string'),], className="section-container-text"),
+
         html.Div(children=[dcc.Graph(
-            id='kmeans-scatter',
-            figure=fig_kmeans_scatter,
+            id='kmeans-scatter-LIVE',
+            # figure=fig_kmeans_scatter,
         )], className="six columns"),
         html.Div([
-            html_kmeans_img_STATIC,
+            html.Img(id='kmeans-picture-LIVE')
         ], className="six columns"),
     ], className="row")
 )
+
+
+#%% Kmeans Image and Scatter STATIC
+# DOM.append( html.H3("(Static demo)"))
+# DOM.append(
+#     html.Div([
+#         html.Div(children=[dcc.Graph(
+#             figure=fig_kmeans_scatter,
+#         )], className="six columns"),
+#         html.Div([
+#             html_kmeans_img_STATIC,
+#         ], className="six columns"),
+#     ], className="row")
+# )
 
 
 #%% Kmeans
