@@ -71,6 +71,14 @@ class Image():
         """
 
         self.img = imutils.load_rgb_from_zip(image_zip, self.image_id)
+        # TODO: FOR TESTING ONLY!!!!
+        # self.img = 200 * np.ones(shape=self.img.shape, dtype=np.uint8)
+        # self.img[:300,:300,:] = 100 * np.ones(3, dtype=np.uint8)
+        # logging.info("DEBUG ON: ".format())
+
+        # print(self.img)
+        # print(self.img.shape)
+
         self.encoding = 'RGB'
         logging.info("Loaded {}, size {} ".format(self.image_id, self.img.shape))
 

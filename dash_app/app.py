@@ -134,18 +134,19 @@ df_test['index_number'] = range(0, len(df_test))
 df_sample = df_test.head()
 
 # %%%%%%%%%%%% LOAD 1 IMAGE INSTANCE
-if 0:
+STATIC_IMG = 1
+if STATIC_IMG:
     image_id = df_by_image.index[2]  # Select an image with 15 ships
     image = Image(image_id)
     image.load(img_zip, df_test)
     image.load_ships()
 
 #%% Perform KMeans
-if 0:
+if STATIC_IMG:
     kmeans = image.k_means(num_clusters=2)
 
 #%% KMeans image
-if 0:
+if STATIC_IMG:
     kmeans_img = fit_kmeans_pixels(image.img, kmeans)
 
     # Build an image HTML object
@@ -235,10 +236,15 @@ DOM.append(
 )
 
 #%% Kmeans Image and Scatter LIVE
+# html.Div(children=[
+#             html.P(id='kmeans-summary-string',children='Init string'),
+#             className="section-container-text") ]),
+# DOM.append(html.P(id='kmeans-summary-string', children=['Init string']))
+DOM.append(dcc.Markdown(id='kmeans-summary-string'))
+
+# summary_string = "TEST \n TEST \n P3"
 DOM.append(
     html.Div([
-        html.Div([html.P(id='kmeans-summary-string'),], className="section-container-text"),
-
         html.Div(children=[dcc.Graph(
             id='kmeans-scatter-LIVE',
             # figure=fig_kmeans_scatter,
@@ -251,17 +257,18 @@ DOM.append(
 
 
 #%% Kmeans Image and Scatter STATIC
-# DOM.append( html.H3("(Static demo)"))
-# DOM.append(
-#     html.Div([
-#         html.Div(children=[dcc.Graph(
-#             figure=fig_kmeans_scatter,
-#         )], className="six columns"),
-#         html.Div([
-#             html_kmeans_img_STATIC,
-#         ], className="six columns"),
-#     ], className="row")
-# )
+if 0:
+    DOM.append(html.H3("(Static demo)"))
+    DOM.append(
+        html.Div([
+            html.Div(children=[dcc.Graph(
+                figure=fig_kmeans_scatter,
+            )], className="six columns"),
+            html.Div([
+                html_kmeans_img_STATIC,
+            ], className="six columns"),
+        ], className="row")
+    )
 
 
 #%% Kmeans

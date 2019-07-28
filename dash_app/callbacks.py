@@ -119,6 +119,9 @@ def register_callbacks(app, df, df_by_image, img_zip, Image):
 
         # Get ellipse image
         ndarray_ellipse_image = image.draw_ellipses_img()
+        print("Original Image:")
+        print(ndarray_ellipse_image)
+        print('ndarray_ellipse_image', ndarray_ellipse_image.shape)
         jpg_ellipse_image = convert_rgb_img_to_b64string(ndarray_ellipse_image)
         image_source_string = "data:image/png;base64, {}".format(jpg_ellipse_image)
         col_heads = [{"name": i, "id": i} for i in df_ships.columns]
@@ -153,7 +156,10 @@ def register_callbacks(app, df, df_by_image, img_zip, Image):
 
 
     )  # END DECORATOR
-    def button_random(n_clicks, n_clusters, image_id):
+    def kmeans_update(n_clicks, n_clusters, image_id):
+        if image_id==None:
+            image_id = '1defabda3.jpg'
+        print('n_clicks', n_clicks, 'n_clusters', n_clusters, 'image_id', image_id)
         print("START K Means with {} clusters on image {}".format(n_clusters, image_id))
 
         image = Image(image_id)
@@ -167,14 +173,19 @@ def register_callbacks(app, df, df_by_image, img_zip, Image):
 
         # Get the image
         kmeans_img = fit_kmeans_pixels(image.img, kmeans)
+        kmeans_img_canvas = kmeans_img
         kmeans_img_canvas = kmeans_img * 255
         kmeans_img_canvas = kmeans_img_canvas.astype(int)
 
 
         # print("KMEANS IMAGE CANVAS:")
-        # print(kmeans_img_canvas)
+        print(kmeans_img_canvas)
+        print('kmeans_img_canvas', kmeans_img_canvas.shape)
+
+
         # Build an image HTML object
         kmeans_img_str = convert_rgb_img_to_b64string_straight(kmeans_img_canvas)
+        # kmeans_img_str = convert_rgb_img_to_b64string(kmeans_img_canvas)
         image_source_string = "data:image/png;base64, {}".format(kmeans_img_str)
         html_kmeans_img_STATIC = html.Img(src=image_source_string)
 
@@ -182,7 +193,31 @@ def register_callbacks(app, df, df_by_image, img_zip, Image):
         fig = get_kmeans_figure(image, kmeans)
 
 
-        return None, image_source_string, fig, "TEST STRING"
+
+        # Get the text summary
+        summary_string = f"""
+##### **KMeans fit results**
+    num_clusters = {n_clusters}"""
+
+        def add_md_line(md_str, new_line):
+            md_str += "\n\n" + new_line
+            return md_str
+
+        unique, counts = np.unique(kmeans.labels_, return_counts=True)
+        for c_name, c_count, c_position in zip(unique, counts, kmeans.cluster_centers_):
+            this_col = np.around(c_position, 3) * 255
+            lg_str = "\tCluster {} at {} with {:0.1%} of the pixels".format(c_name, this_col, c_count/data.shape[0])
+            logging.info(lg_str)
+            summary_string = add_md_line(summary_string,lg_str)
+
+        if len(unique) == 2:
+            dist = np.linalg.norm(kmeans.cluster_centers_[0] - kmeans.cluster_centers_[1])
+            lg_str = "\tDistance between c1 and c2: {}".format(dist)
+            logging.info(lg_str)
+            summary_string = add_md_line(summary_string,lg_str)
+
+        # print('Summary String: ', summary_string)
+        return "", image_source_string, fig, summary_string
 
 
     # %% TESTING GRAPH

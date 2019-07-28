@@ -3,6 +3,7 @@ import plotly.graph_objs as go
 import numpy as np
 import logging
 
+
 def create_plot(x, y, z, size, color, name, xlabel="LogP", ylabel="pkA", zlabel="Solubility (mg/ml)",
                 plot_type="scatter3d", markers=[], ):
     colorscale = [
@@ -177,6 +178,8 @@ def get_ellipsed_images(image_id):
         # img = imutils.draw_ellipse_and_axis(img, contour, thickness=2)
         img = imutils.fit_draw_ellipse(img, contour, thickness=2)
     return img, contours
+
+
 # %%%%%%%%%%%% CLASSES
 # %%
 def plot_hist(img, ax):
@@ -188,7 +191,8 @@ def plot_hist(img, ax):
     # ax.get_xaxis().set_visible(False)
     # ax.get_yaxis().set_visible(False)
 
-#%%
+
+# %%
 # TODO: THIS FUNCTION IS DOUBLED HERE! FROM eda_00.py!
 def get_kmeans_color(img, _kmeans):
     """asdf
@@ -225,6 +229,7 @@ def get_kmeans_color(img, _kmeans):
 
     return pixel_locations, color_vec_i, labels_vec_i
 
+
 def plot_kmeans_color2(pixel_locs, colors, labels):
     fig = plt.figure(figsize=PAPER['A4_LANDSCAPE'], facecolor='white')
     ax = plt.axes(projection="3d")
@@ -232,16 +237,16 @@ def plot_kmeans_color2(pixel_locs, colors, labels):
 
     for label in np.unique(labels).tolist():
         this_cluster_mask = labels == label
-        ax.scatter(R[this_cluster_mask], G[this_cluster_mask], B[this_cluster_mask], color=colors[this_cluster_mask], depthshade=False)
+        ax.scatter(R[this_cluster_mask], G[this_cluster_mask], B[this_cluster_mask], color=colors[this_cluster_mask],
+                   depthshade=False)
 
     ax.set(xlabel='Red', ylabel='Green', zlabel='Blue', xlim=(0, 1), ylim=(0, 1))
-
-
 
 
 # %% KMeans figure
 def get_kmeans_figure(image, kmeans):
     pixel_locs, colors, labels = get_kmeans_color(image.img, kmeans)
+    pixel_locs = pixel_locs * 255
     R, G, B = pixel_locs.T
 
     fig = go.Figure()
@@ -273,25 +278,31 @@ def get_kmeans_figure(image, kmeans):
             backgroundcolor=bg_color,
             gridcolor="white",
             showbackground=True,
-            zerolinecolor="white", ),
+            zerolinecolor="white",
+            range=[0, 255]
+        ),
         yaxis=dict(
             # backgroundcolor="rgb(220, 255, 220)",
             backgroundcolor=bg_color,
             gridcolor="white",
             showbackground=True,
-            zerolinecolor="white"),
+            zerolinecolor="white",
+            range=[0, 255],
+        ),
         zaxis=dict(
             # backgroundcolor="rgb(220, 220, 255)",
             backgroundcolor=bg_color,
             gridcolor="white",
             showbackground=True,
-            zerolinecolor="white", ),
+            zerolinecolor="white",
+            range=[0, 255],
+        ),
         xaxis_title='Red',
         yaxis_title='Green',
         zaxis_title='Blue',
-        ),
+    ),
     )
     fig.update_layout(
         margin=dict(l=20, r=20, t=20, b=20),
-    height=800)
+        height=800)
     return fig
