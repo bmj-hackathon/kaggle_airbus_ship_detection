@@ -73,7 +73,7 @@ import sys
 path_image_class = Path().cwd() / 'src' / '3_EDA'
 path_image_class = path_image_class.resolve()
 sys.path.append(str(path_image_class.absolute()))
-print(sys.path)
+# print(sys.path)
 from eda_00_Image_class import Image, convert_rgb_img_to_b64string, fit_kmeans_pixels, convert_rgb_img_to_b64string_straight, get_kmeans_color
 
 # %% UTILS
@@ -101,7 +101,7 @@ app.css.append_css({
 
 # %%%%%%%%%%%% LOAD
 data_path = Path("/media/batman/f4023177-48c1-456b-bff2-cc769f3ac277/DATA/airbus-ship-detection")
-assert data_path.exists()
+assert data_path.exists(), "Can't find the data path!"
 img_zip_path = data_path / 'train_v2.zip'
 assert img_zip_path.exists()
 record_path = data_path / 'train_ship_segmentations_v2.csv'
@@ -134,7 +134,7 @@ df_test['index_number'] = range(0, len(df_test))
 df_sample = df_test.head()
 
 # %%%%%%%%%%%% LOAD 1 IMAGE INSTANCE
-STATIC_IMG = 1
+STATIC_IMG = 0
 if STATIC_IMG:
     image_id = df_by_image.index[2]  # Select an image with 15 ships
     image = Image(image_id)
@@ -161,10 +161,10 @@ if STATIC_IMG:
 MAX_SHIPS = 15
 DOM = list()
 
-#%% Section:  Main title
+#%% SECTION:  Main title
 DOM.append(html.H1(children='Satellite Data visualization', className='title'))
 
-#%% Section: Ship number select
+#%% SECTION: Ship number select
 DOM.append(
     html.Div([
         html.H2("Ship selection"),
@@ -197,7 +197,7 @@ DOM.append(
     ], className="section-container")
 )
 
-#%% Section: Summary table and image
+#%% SECTION: Summary table and image
 DOM.append(html.H3(children=[html.Span("Selected image:"),html.Span(id='image_id')]))
 DOM.append(
     html.Div([
@@ -216,7 +216,7 @@ DOM.append(
 )
 
 
-#%% Section: Kmeans Cluster Select
+#%% Section: Kmeans Cluster Selection
 DOM.append(
     html.Div([
         html.H2("K-Means segmentation "),
@@ -271,12 +271,11 @@ if 0:
     )
 
 
-#%% Kmeans
+#%% Build the Layout, given the DOM as a list
 app.layout = html.Div(children=DOM + [
-
 ])
 
-
+# Register all callbacks, pass in state
 register_callbacks(app, df_test, df_by_image, img_zip, Image)
 
 if __name__ == '__main__':

@@ -8,6 +8,11 @@ import cv2
 import pandas as pd
 import base64
 
+class SimpleImage:
+    def __init__(self, image_id):
+        pass
+
+
 class Image():
     def __init__(self, image_id):
         """
@@ -40,10 +45,6 @@ class Image():
     def num_ships(self):
         if len(self.records) == 1:
             rec = self.records.head(1)
-            # print(rec)
-            # print(rec.columns)
-            # print(rec['EncodedPixels'])
-            # print(rec['EncodedPixels'].values[0])
             if isinstance(rec['EncodedPixels'].values[0], str):
                 return 1
             else:
