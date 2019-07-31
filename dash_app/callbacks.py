@@ -109,8 +109,10 @@ def register_callbacks(app, df, df_by_image, img_zip, Image):
         if not image.num_ships:
             jpg_ellipse_image = convert_rgb_img_to_b64string(image.img)
             image_source_string = "data:image/png;base64, {}".format(jpg_ellipse_image)
+            # TODO: Messy way to make an empty table
+            col_heads = [{"name": c, "id": c} for c in ['ship', 'index_number', 'x', 'y', 'area', 'angle',]]
             empty_data = [{'ship': 'None', 'index_number': 'n/a', 'x': 'n/a', 'y': 'n/a', 'area': 'n/a', 'angle': 'n/a'}]
-            return empty_data, image_source_string
+            return col_heads, empty_data, image_source_string
 
         image.load_ships()
 
@@ -159,6 +161,7 @@ def register_callbacks(app, df, df_by_image, img_zip, Image):
     )  # END DECORATOR
     def kmeans_update(n_clicks, n_clusters, image_id):
         if image_id==None:
+            print("Sample image loaded for start!")
             image_id = '1defabda3.jpg'
         print('n_clicks', n_clicks, 'n_clusters', n_clusters, 'image_id', image_id)
         print("START K Means with {} clusters on image {}".format(n_clusters, image_id))
@@ -185,12 +188,12 @@ def register_callbacks(app, df, df_by_image, img_zip, Image):
 
         # print("KMEANS IMAGE CANVAS:")
         print(kmeans_img_canvas)
-        print('kmeans_img_canvas', kmeans_img_canvas.shape)
-
+        print('kmeans_img_canvas', type(kmeans_img_canvas), kmeans_img_canvas.dtype, kmeans_img_canvas.shape)
+        kmeans_img_canvas = kmeans_img_canvas.astype(np.uint8)
 
         # Build an image HTML object
-        kmeans_img_str = convert_rgb_img_to_b64string_straight(kmeans_img_canvas)
-        # kmeans_img_str = convert_rgb_img_to_b64string(kmeans_img_canvas)
+        # kmeans_img_str = convert_rgb_img_to_b64string_straight(kmeans_img_canvas)
+        kmeans_img_str = convert_rgb_img_to_b64string(kmeans_img_canvas)
         image_source_string = "data:image/png;base64, {}".format(kmeans_img_str)
         html_kmeans_img_STATIC = html.Img(src=image_source_string)
 
