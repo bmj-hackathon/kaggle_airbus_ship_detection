@@ -9,8 +9,45 @@ import pandas as pd
 import base64
 
 class SimpleImage:
-    def __init__(self, image_id):
-        pass
+    def __init__(self, img_array, encoding):
+        self.img_array = img_array
+        self.encoding = encoding
+
+    @classmethod
+    def load_from_zip_as_rgb(cls, zfile, fname):
+        data = zfile.read(fname)
+        img = cv2.imdecode(np.frombuffer(data, np.uint8), 1)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        return cls(img, 'RGB')
+
+    @classmethod
+    def load_from_path(cls, img_path):
+        img = cv2.imread(img_path)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        return cls(img, 'RGB')
+
+    def convert_to_HSV(self):
+        source_conversions = {
+            'RGB': lambda img: cv2.cvtColor(img, cv2.COLOR_RGB2HSV),
+            'BGR': lambda img: cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        }
+        if self.encoding in source_conversions:
+            self.img_array = source_conversions[self.encoding](self.img_array)
+        else:
+            raise KeyError("No conversion available for {}".format(self.encoding))
+
+
+
+    @property
+    def shape(self):
+        return self.img_array.shape
+
+    @property
+    def arr(self):
+        return self.img_array
+
+    def get_img_bgr(self):
+        return cv2.cvtColor(self.img, cv2.COLOR_RGB2BGR)
 
 
 class ShipImage():
