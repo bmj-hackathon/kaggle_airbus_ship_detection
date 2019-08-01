@@ -3,7 +3,7 @@ import logging
 import imutils
 import numpy as np
 import sklearn as sk
-# import sklearn.cluster
+import sklearn.cluster
 import cv2
 import pandas as pd
 import base64
@@ -13,7 +13,7 @@ class SimpleImage:
         pass
 
 
-class Image():
+class ShipImage():
     def __init__(self, image_id):
         """
 

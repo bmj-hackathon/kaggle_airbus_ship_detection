@@ -13,10 +13,11 @@ import sys
 path_image_class = Path().cwd() / 'src' / '3_EDA'
 path_image_class = path_image_class.resolve()
 sys.path.append(str(path_image_class.absolute()))
-print(sys.path)
-from eda_00_Image_class import Image, convert_rgb_img_to_b64string, fit_kmeans_pixels, convert_rgb_img_to_b64string_straight
+# print(sys.path)
+from eda_00_Image_class import ShipImage, convert_rgb_img_to_b64string, fit_kmeans_pixels, convert_rgb_img_to_b64string_straight
 
-def register_callbacks(app, df, df_by_image, img_zip, Image):
+#def register_callbacks(app, df, df_by_image, img_zip, Image):
+def register_callbacks(app, df, df_by_image, img_zip):
 
 
     # %%-----------------
@@ -103,7 +104,7 @@ def register_callbacks(app, df, df_by_image, img_zip, Image):
         # print("Getting image number {}".format(image_id_index_number))
         # image_id = df.iloc[image_id_index_number, :].index
         # print("image_id=",image_id)
-        image = Image(image_id)
+        image = ShipImage(image_id)
         image.load(img_zip, df)
         logging.info("GET IMAGE DATA,  num_ships = ".format(image.num_ships))
         if not image.num_ships:
@@ -164,7 +165,7 @@ def register_callbacks(app, df, df_by_image, img_zip, Image):
         print('n_clicks', n_clicks, 'n_clusters', n_clusters, 'image_id', image_id)
         print("START K Means with {} clusters on image {}".format(n_clusters, image_id))
 
-        image = Image(image_id)
+        image = ShipImage(image_id)
         image.load(img_zip, df)
         kmeans = image.k_means(n_clusters)
 
@@ -185,8 +186,8 @@ def register_callbacks(app, df, df_by_image, img_zip, Image):
 
 
         # print("KMEANS IMAGE CANVAS:")
-        print(kmeans_img_canvas)
-        print('kmeans_img_canvas', type(kmeans_img_canvas), kmeans_img_canvas.dtype, kmeans_img_canvas.shape)
+        # print(kmeans_img_canvas)
+        # print('kmeans_img_canvas', type(kmeans_img_canvas), kmeans_img_canvas.dtype, kmeans_img_canvas.shape)
         kmeans_img_canvas = kmeans_img_canvas.astype(np.uint8)
 
         # Build an image HTML object

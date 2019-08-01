@@ -3,10 +3,10 @@ import dash
 print(dash.__version__)
 import dash_core_components as dcc
 import dash_html_components as html
-import dash_daq as daq
+# import dash_daq as daq
 import dash_table
-import plotly.graph_objs as go
-import plotly.express as px
+# import plotly.graph_objs as go
+# import plotly.express as px
 # from helpers import make_dash_table, create_plot
 
 # %%%%%%%%%%%% LOGGING
@@ -34,33 +34,33 @@ logging.info("Logging started")
 # %%%%%%%%%%%% IMPORTS
 # import the necessary packages
 
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import train_test_split
-
-import imutils
-from imutils.mj_paper import PAPER
-
-import numpy as np
-import argparse
-import cv2
-import os
+# from sklearn.neighbors import KNeighborsClassifier
+# from sklearn.model_selection import train_test_split
+#
+# import imutils
+# from imutils.mj_paper import PAPER
+#
+# import numpy as np
+# import argparse
+# import cv2
+# import os
 
 import dash
 
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import matplotlib.image as mplimg
-from matplotlib.pyplot import imshow
-from mpl_toolkits.mplot3d import Axes3D
-
-import sklearn as sk
-import sklearn.cluster
+# import matplotlib as mpl
+# import matplotlib.pyplot as plt
+# import matplotlib.image as mplimg
+# from matplotlib.pyplot import imshow
+# from mpl_toolkits.mplot3d import Axes3D
+#
+# import sklearn as sk
+# import sklearn.cluster
 
 import seaborn as sns
 
 sns.set()
 
-import random
+# import random
 import pandas as pd
 from pathlib import Path
 import zipfile
@@ -74,7 +74,7 @@ path_image_class = Path().cwd() / 'src' / '3_EDA'
 path_image_class = path_image_class.resolve()
 sys.path.append(str(path_image_class.absolute()))
 # print(sys.path)
-from eda_00_Image_class import Image, convert_rgb_img_to_b64string, fit_kmeans_pixels, convert_rgb_img_to_b64string_straight, get_kmeans_color
+from eda_00_Image_class import ShipImage, convert_rgb_img_to_b64string, fit_kmeans_pixels, convert_rgb_img_to_b64string_straight, get_kmeans_color
 
 # %% UTILS
 from utils import *
@@ -138,7 +138,7 @@ df_sample = df_test.head()
 STATIC_IMG = 0
 if STATIC_IMG:
     image_id = df_by_image.index[2]  # Select an image with 15 ships
-    image = Image(image_id)
+    image = ShipImage(image_id)
     image.load(img_zip, df_test)
     image.load_ships()
 
@@ -272,7 +272,8 @@ app.layout = html.Div(children=DOM + [
 ], className="container-wide")
 
 # Register all callbacks, pass in state
-register_callbacks(app, df_test, df_by_image, img_zip, Image)
+register_callbacks(app, df_test, df_by_image, img_zip)
+#register_callbacks(app, df_test, df_by_image, img_zip, ShipImage)
 
 if __name__ == '__main__':
     app.run_server(debug=True)
