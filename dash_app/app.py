@@ -89,6 +89,7 @@ except:
 
 # %% General, entry point
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+# external_stylesheets = ['https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css']
 # app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 assets_url_path = Path.cwd() / 'dash_app' / 'assets'
 
@@ -268,7 +269,7 @@ if 0:
 
 #%% Build the Layout, given the DOM as a list
 app.layout = html.Div(children=DOM + [
-])
+], className="container-wide")
 
 # Register all callbacks, pass in state
 register_callbacks(app, df_test, df_by_image, img_zip, Image)
