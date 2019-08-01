@@ -105,7 +105,7 @@ def register_callbacks(app, df, df_by_image, img_zip, Image):
         # print("image_id=",image_id)
         image = Image(image_id)
         image.load(img_zip, df)
-        print("GET IMAGE DATA,  num_ships = ", image.num_ships)
+        logging.info("GET IMAGE DATA,  num_ships = ".format(image.num_ships))
         if not image.num_ships:
             jpg_ellipse_image = convert_rgb_img_to_b64string(image.img)
             image_source_string = "data:image/png;base64, {}".format(jpg_ellipse_image)
@@ -121,9 +121,9 @@ def register_callbacks(app, df, df_by_image, img_zip, Image):
 
         # Get ellipse image
         ndarray_ellipse_image = image.draw_ellipses_img()
-        print("Original Image:")
-        print(ndarray_ellipse_image)
-        print('ndarray_ellipse_image', ndarray_ellipse_image.shape)
+        # print("Original Image:")
+        # print(ndarray_ellipse_image)
+        # print('ndarray_ellipse_image', ndarray_ellipse_image.shape)
         # jpg_ellipse_image = convert_rgb_img_to_b64string(ndarray_ellipse_image)
         jpg_ellipse_image = convert_rgb_img_to_b64string(ndarray_ellipse_image)
         image_source_string = "data:image/png;base64, {}".format(jpg_ellipse_image)
@@ -139,25 +139,23 @@ def register_callbacks(app, df, df_by_image, img_zip, Image):
     # --------------------
     # if 0:
     @app.callback(
-        [
+        output=[
             dash.dependencies.Output('empty-para', 'children'),
             dash.dependencies.Output('kmeans-picture-LIVE', 'src'),
             dash.dependencies.Output('kmeans-scatter-LIVE', 'figure'),
             dash.dependencies.Output('kmeans-summary-string', 'children'),
         ],
 
-        [dash.dependencies.Input('button-start-kmeans', 'n_clicks'),
-         # dash.dependencies.Input('slider-cluster-counts', 'value'),
-         # dash.dependencies.Input('image_id', 'children')
+        inputs=[
+            dash.dependencies.Input('button-start-kmeans', 'n_clicks'),
+            # dash.dependencies.Input('slider-cluster-counts', 'value'),
+            # dash.dependencies.Input('image_id', 'children')
          ],
 
-        [
+        state=[
             dash.dependencies.State('slider-cluster-counts', 'value'),
             dash.dependencies.State('image_id', 'children'),
         ]
-
-
-
     )  # END DECORATOR
     def kmeans_update(n_clicks, n_clusters, image_id):
         if image_id==None:

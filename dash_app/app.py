@@ -224,11 +224,11 @@ DOM.append(
         dcc.Slider(
             id='slider-cluster-counts',
             className='slider',
-            min=0,
+            min=1,
             max=10,
             step=1,
             value=2,
-            marks={n: '{}'.format(n) for n in range(10 + 1)},
+            marks={n: '{}'.format(n) for n in range(9 + 2)},
         ),
         html.P("", id='empty-para'),
         html.Button('Perform KMeans clustering', id='button-start-kmeans'),
@@ -236,13 +236,8 @@ DOM.append(
 )
 
 #%% Kmeans Image and Scatter LIVE
-# html.Div(children=[
-#             html.P(id='kmeans-summary-string',children='Init string'),
-#             className="section-container-text") ]),
-# DOM.append(html.P(id='kmeans-summary-string', children=['Init string']))
 DOM.append(dcc.Markdown(id='kmeans-summary-string'))
 
-# summary_string = "TEST \n TEST \n P3"
 DOM.append(
     html.Div([
         html.Div(children=[dcc.Graph(

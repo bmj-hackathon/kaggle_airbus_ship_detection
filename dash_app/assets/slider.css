@@ -12,7 +12,7 @@ rc-slider-mark-text {
 }
 
 div.rc-slider-track {
-    background-color: black;
+    background-color: rgba(0, 163, 0, 0.35);
 }
 
 /*.rc-slider-track {*/

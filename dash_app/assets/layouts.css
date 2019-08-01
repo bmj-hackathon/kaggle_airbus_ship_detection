@@ -2,9 +2,10 @@
     border-radius: 25px;
     position: relative;
     width:95%;
-    background-color: lightcyan;
+    background-color: rgba(100,100,100,.1);
     margin: 20px 20px 20px 20px;
     padding: 20px 20px 20px 20px;
+    /*opacity: 0.5;               !* Good browsers *!*/
 }
 
 .section-container-text {
