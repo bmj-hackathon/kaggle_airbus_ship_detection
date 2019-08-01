@@ -9,9 +9,17 @@ import pandas as pd
 import base64
 
 class SimpleImage:
+    """Wrapper around CV2
+
+    Stores and tracks encoding
+    """
     def __init__(self, img_array, encoding):
         self.img_array = img_array
         self.encoding = encoding
+        logging.info("SimpleImage {}".format(self))
+
+    def __str__(self):
+        return "{} {}".format(self.encoding, self.img_array.shape)
 
     @classmethod
     def load_from_zip_as_rgb(cls, zfile, fname):
@@ -22,7 +30,7 @@ class SimpleImage:
 
     @classmethod
     def load_from_path(cls, img_path):
-        img = cv2.imread(img_path)
+        img = cv2.imread(str(img_path))
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         return cls(img, 'RGB')
 
@@ -36,7 +44,21 @@ class SimpleImage:
         else:
             raise KeyError("No conversion available for {}".format(self.encoding))
 
+    def get_channels(self):
+        """Return each channel as a dictionary
 
+        :return: chan: 2d ndarray dictionary
+        """
+        # The image is 2D and 'color'
+        assert len(self.shape) == 3
+        # The image has 3 channels
+        assert self.shape[2] == 3
+
+        channel_dict = dict()
+        for i, chan in enumerate(self.encoding):
+            channel_dict[chan] = self.img_array[self.img_array.shape[0], self.img_array.shape[1], i]
+
+        return channel_dict
 
     @property
     def shape(self):

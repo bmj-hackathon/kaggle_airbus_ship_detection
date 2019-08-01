@@ -3,6 +3,28 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import pyplot
 # from PIL import Image
 
+#%%
+import logging
+import sys
+logger = logging.getLogger()
+logger.handlers = []
+
+# Set level
+logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
+
+# Create formatter
+FORMAT = "%(levelno)-2s %(asctime)s : %(message)s"
+DATE_FMT = "%Y-%m-%d %H:%M:%S"
+formatter = logging.Formatter(FORMAT, DATE_FMT)
+
+# Create handler and assign
+handler = logging.StreamHandler(sys.stderr)
+handler.setFormatter(formatter)
+logger.handlers = [handler]
+logging.info("Logging started")
+
+
 # %%%%%%%%%%%% LOAD IMAGE CLASS
 
 # TODO: This is just a patch for now, local dev!
@@ -21,6 +43,7 @@ image_name = "28db2ad2c.jpg"
 image_path = data_path / image_name
 
 img = SimpleImage.load_from_path(image_path)
+chans = img.get_channels()
 
 #%%
 
