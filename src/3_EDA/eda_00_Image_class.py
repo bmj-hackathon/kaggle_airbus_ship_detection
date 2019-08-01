@@ -56,7 +56,7 @@ class SimpleImage:
 
         channel_dict = dict()
         for i, chan in enumerate(self.encoding):
-            channel_dict[chan] = self.img_array[self.img_array.shape[0], self.img_array.shape[1], i]
+            channel_dict[chan] = self.img_array[:, :, i]
 
         return channel_dict
 

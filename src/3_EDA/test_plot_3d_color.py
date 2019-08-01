@@ -44,11 +44,14 @@ image_path = data_path / image_name
 
 img = SimpleImage.load_from_path(image_path)
 chans = img.get_channels()
+print(chans)
+
+chans['R'].shape
 
 #%%
 
-import sys
-sys.exit()
+# import sys
+# sys.exit()
 
 
 #%%
