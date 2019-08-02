@@ -41,8 +41,26 @@ class SimpleImage:
         }
         if self.encoding in source_conversions:
             self.img_array = source_conversions[self.encoding](self.img_array)
+            self.encoding = 'HSV'
         else:
             raise KeyError("No conversion available for {}".format(self.encoding))
+
+    def convert_to_BGR(self, inplace=True):
+        source_conversions = {
+            'RGB': lambda img: cv2.cvtColor(img, cv2.COLOR_RGB2BGR),
+            'HSV': lambda img: cv2.cvtColor(img, cv2.COLOR_HSV2BGR)
+        }
+        if self.encoding in source_conversions:
+            converted_img = source_conversions[self.encoding](self.img_array)
+        else:
+            raise KeyError("No conversion available for {}".format(self.encoding))
+
+        # Either change this instance, or return the image array
+        if inplace:
+            self.img_array = converted_img
+            self.encoding = 'BGR'
+        else:
+            return converted_img
 
     def get_channels(self):
         """Return each channel as a dictionary
@@ -70,6 +88,28 @@ class SimpleImage:
 
     def get_img_bgr(self):
         return cv2.cvtColor(self.img, cv2.COLOR_RGB2BGR)
+
+    def get_b64_jpg(self, img_format='.jpg'):
+        """ cv2.imencode assumes the existing format is BGR!
+
+        :param img_format:
+        :return:
+        """
+        if self.encoding != 'BGR':
+            converted_img = self.convert_to_BGR(inplace=False)
+        retval, buffer = cv2.imencode(img_format, converted_img)
+
+        # Convert to base64 raw bytes
+        jpg_as_text = base64.b64encode(buffer)
+
+        # Decode the bytes to utf
+        jpg_as_text = jpg_as_text.decode(encoding="utf-8")
+
+        logging.info("Image encoded to jpg base64 string".format())
+
+        return jpg_as_text
+
+
 
 
 class ShipImage():
