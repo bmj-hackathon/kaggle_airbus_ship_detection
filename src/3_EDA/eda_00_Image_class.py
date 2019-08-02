@@ -111,6 +111,28 @@ class SimpleImage:
 
 
 
+# def get_channels_as_greyscale_b64(img_arr):
+
+def get_channels_b64(simple_img):
+    """From a SimpleImage, get 3 b64 jpg strings, 1 per channel
+
+    :param simple_img:
+    :return:
+    """
+
+    assert type(simple_img) == SimpleImage
+    chans = simple_img.get_channels()
+    b64_channels = dict()
+    for chan in chans:
+        # print(chan)
+        # chans[chan]
+        retval, buffer = cv2.imencode('.jpg', chans[chan])
+        jpg_as_text = base64.b64encode(buffer)
+
+        # Decode the bytes to utf
+        jpg_as_text = jpg_as_text.decode(encoding="utf-8")
+        b64_channels[chan] = jpg_as_text
+    return b64_channels
 
 class ShipImage():
     def __init__(self, image_id):

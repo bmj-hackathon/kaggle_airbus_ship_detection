@@ -4,10 +4,11 @@ from matplotlib import pyplot
 # from PIL import Image
 import plotly.io as pio
 pio.renderers.default = "browser"
-
+import plotly as plotly
 import numpy as np
 import plotly.graph_objs as go
-
+import cv2
+import base64
 #%%
 import logging
 import sys
@@ -41,6 +42,8 @@ sys.path.append(str(path_image_class.absolute()))
 # print(sys.path)
 from eda_00_Image_class import SimpleImage, ShipImage, convert_rgb_img_to_b64string, fit_kmeans_pixels, convert_rgb_img_to_b64string_straight
 
+import eda_00_Image_class as mj_img_utils
+
 #%%
 data_path = Path(r"/media/batman/f4023177-48c1-456b-bff2-cc769f3ac277/DATA/airbus-ship-detection/sample_images")
 image_name = "28db2ad2c.jpg"
@@ -52,17 +55,86 @@ chans = img.get_channels()
 # print(chans)
 
 chans['R'].shape
+np.max(chans['R'])
 img_str = img.get_b64_jpg()
+# cv2.cvtColor(chans['R'], cv2.COLOR)
+
 #%%
-def get_image_figure(simpleimg, scale):
+channel_imgs = mj_img_utils.get_channels_b64(img)
+channel_imgs
+
+fig = plotly.subplots.make_subplots(rows=1, cols=3)
+# for c in enumerate(channel_imgs):
+#     fig.add_trace()
+
+# fig.add_trace(
+#     go.Scatter(x=[1, 2, 3], y=[4, 5, 6]),
+#     row=1, col=1
+# )
+#
+# fig.add_trace(
+#     go.Scatter(x=[20, 30, 40], y=[50, 60, 70]),
+#     row=1, col=2
+# )
+fig.add_trace(
+    go.Scatter(
+        x=[0, 768 * 1],
+        y=[0, 768 * 1],
+        mode="markers",
+        marker_opacity=0
+    )
+)
+fig.add_trace(
+    go.Scatter(
+        x=[0, 768 * 1],
+        y=[0, 768 * 1],
+        mode="markers",
+        marker_opacity=0
+    )
+)
+fig.add_trace(
+    go.Scatter(
+        x=[0, 768 * 1],
+        y=[0, 768 * 1],
+        mode="markers",
+        marker_opacity=0
+    )
+)
+def get_img_layout(ref):
+    this = go.layout.Image(
+        x=0,
+        sizex=768,
+        y=768,
+        sizey=768,
+        xref="x{}".format(ref),
+        yref="y{}".format(ref),
+        opacity=1.0,
+        layer="below",
+        sizing="stretch",
+        source='data:image/jpg;base64,{}'.format(img_str))
+    return this
+
+# Add image
+fig.update_layout(
+    images=[get_img_layout(""),get_img_layout(2),get_img_layout(3)]
+)
+# for x in fig.layout:
+#     print(x)
+fig.update_layout(height=600, width=800, title_text="Subplots")
+fig.show()
+
+raise
+
+#%%
+def get_image_figure(size, b64_img_str, scale):
     # Create figure
     fig = go.Figure()
 
     # Constants
-    img_width = img.shape[0]
-    img_height = img.shape[1]
+    img_width = size[0]
+    img_height = size[1]
 
-    scale_factor = 0.9
+    scale_factor = scale
 
     # Add invisible scatter trace.
     # This trace is added to help the autoresize logic work.
@@ -100,8 +172,7 @@ def get_image_figure(simpleimg, scale):
             opacity=1.0,
             layer="below",
             sizing="stretch",
-            # source="https://raw.githubusercontent.com/michaelbabyn/plot_data/master/bridge.jpg")]
-            source='data:image/jpg;base64,{}'.format(img_str))])
+            source='data:image/jpg;base64,{}'.format(b64_img_str))])
 
     # Configure other layout
     fig.update_layout(
@@ -112,8 +183,14 @@ def get_image_figure(simpleimg, scale):
     return fig
 
 
-this_fig = get_image_figure(img, 0.5)
+this_fig = get_image_figure(img.shape[0:2], img.get_b64_jpg(), 0.5)
 this_fig.show()
+
+
+
+this_fig = get_image_figure(img.shape[0:2], jpg_as_text, 0.5)
+this_fig.show()
+
 
 #%%
 # this_figure = {
