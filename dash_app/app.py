@@ -1,18 +1,6 @@
-import dash
-
-print(dash.__version__)
-import dash_core_components as dcc
-import dash_html_components as html
-import dash_daq as daq
-import dash_table
-import plotly.graph_objs as go
-import plotly.express as px
-# from helpers import make_dash_table, create_plot
-
 # %%%%%%%%%%%% LOGGING
 import logging
 import sys
-
 logger = logging.getLogger()
 logger.handlers = []
 
@@ -31,21 +19,54 @@ handler.setFormatter(formatter)
 logger.handlers = [handler]
 logging.info("Logging started")
 
+# %%%%%%%%%%%% Command line arguments
+import argparse
+from pathlib import Path
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    '--data_volume',
+    type=Path,
+    help='The path the images and labels',
+    required=True
+)
+
+args = parser.parse_args()
+data_path = args.data_volume
+
+data_path = Path("/media/batman/3D6450257A2A5BEC1/00 DATA/DATA/airbus-ship-detection")
+# data_path = Path("/media/batman/f4023177-48c1-456b-bff2-cc769f3ac277/DATA/airbus-ship-detection")
+assert data_path.exists(), "Can't find the data path, {}!".format(data_path)
+img_zip_path = data_path / 'train_v2.zip'
+assert img_zip_path.exists()
+record_path = data_path / 'train_ship_segmentations_v2.csv'
+assert record_path.exists()
+
 # %%%%%%%%%%%% IMPORTS
-# import the necessary packages
 
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import train_test_split
+# STANDARD
+import os
+import zipfile
+import random
 
+# ### DASH
+import dash
+
+print(dash.__version__)
+import dash_core_components as dcc
+import dash_html_components as html
+import dash_daq as daq
+import dash_table
+import plotly.graph_objs as go
+import plotly.express as px
+# from helpers import make_dash_table, create_plot
+
+# CUSTOM UTIL
 import imutils
 from imutils.mj_paper import PAPER
 
+# SCI STACK
 import numpy as np
-import argparse
-import cv2
-import os
-
-import dash
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -55,18 +76,17 @@ from mpl_toolkits.mplot3d import Axes3D
 
 import sklearn as sk
 import sklearn.cluster
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
 
 import seaborn as sns
-
 sns.set()
-
-import random
 import pandas as pd
-from pathlib import Path
-import zipfile
+
+# OTHER
+import cv2
 
 # %%%%%%%%%%%% LOAD IMAGE CLASS
-
 # TODO: This is just a patch for now, local dev!
 import sys
 
@@ -102,13 +122,6 @@ app.css.append_css({
 
 # %%%%%%%%%%%% LOAD
 
-data_path = Path("/media/batman/3D6450257A2A5BEC1/00 DATA/DATA/airbus-ship-detection")
-# data_path = Path("/media/batman/f4023177-48c1-456b-bff2-cc769f3ac277/DATA/airbus-ship-detection")
-assert data_path.exists(), "Can't find the data path, {}!".format(data_path)
-img_zip_path = data_path / 'train_v2.zip'
-assert img_zip_path.exists()
-record_path = data_path / 'train_ship_segmentations_v2.csv'
-assert record_path.exists()
 
 img_zip = zipfile.ZipFile(img_zip_path)
 
