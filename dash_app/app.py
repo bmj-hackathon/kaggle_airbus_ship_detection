@@ -38,7 +38,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 
 import imutils
-from imutils.mj_paper import PAPER
+# from imutils.mj_paper import PAPER
 
 import numpy as np
 import argparse
@@ -101,8 +101,10 @@ app.css.append_css({
 })
 
 # %%%%%%%%%%%% LOAD
-data_path = Path("/media/batman/f4023177-48c1-456b-bff2-cc769f3ac277/DATA/airbus-ship-detection")
-assert data_path.exists(), "Can't find the data path!"
+
+data_path = Path("/media/batman/3D6450257A2A5BEC1/00 DATA/DATA/airbus-ship-detection")
+# data_path = Path("/media/batman/f4023177-48c1-456b-bff2-cc769f3ac277/DATA/airbus-ship-detection")
+assert data_path.exists(), "Can't find the data path, {}!".format(data_path)
 img_zip_path = data_path / 'train_v2.zip'
 assert img_zip_path.exists()
 record_path = data_path / 'train_ship_segmentations_v2.csv'
