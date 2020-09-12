@@ -139,12 +139,16 @@ version = "0.18.2"
 
 [[package]]
 category = "main"
-description = "A series of convenience functions to make basic image processing functions such as translation, rotation, resizing, skeletonization, displaying Matplotlib images, sorting contours, detecting edges, and much more easier with OpenCV and both Python 2.7 and Python 3."
+description = ""
 name = "imutils"
 optional = false
 python-versions = "*"
-version = "0.5.3"
+version = "0.5.2"
 
+[package.source]
+reference = "e0463e7c8f903df03fa4211833173917660e562b"
+type = "git"
+url = "https://github.com/MarcusJones/imutils"
 [[package]]
 category = "main"
 description = "Various helpers to pass data to untrusted environments and back."
@@ -372,7 +376,7 @@ dev = ["pytest", "pytest-timeout", "coverage", "tox", "sphinx", "pallets-sphinx-
 watchdog = ["watchdog"]
 
 [metadata]
-content-hash = "3e340feac1bc23ec878686acc66d114c23b70bc279ebf0dd4ce989b39eee6bc4"
+content-hash = "e051f1a1fe59ae3ea7c15d73ee91ac01c57984eb589ead9943afd5fd5ee86a2e"
 python-versions = "3.8"
 
 [metadata.files]
@@ -445,9 +449,7 @@ flask-compress = [
 future = [
     {file = "future-0.18.2.tar.gz", hash = "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"},
 ]
-imutils = [
-    {file = "imutils-0.5.3.tar.gz", hash = "sha256:857af6169d90e4a0a814130b9b107f5d611150ce440107e1c1233521c6fb1e2b"},
-]
+imutils = []
 itsdangerous = [
     {file = "itsdangerous-1.1.0-py2.py3-none-any.whl", hash = "sha256:b12271b2047cb23eeb98c8b5622e2e5c5e9abd9784a153e9d8ef9cb4dd09d749"},
     {file = "itsdangerous-1.1.0.tar.gz", hash = "sha256:321b033d07f2a4136d3ec762eac9f16a10ccd60f53c0c91af90217ace7ba1f19"},
