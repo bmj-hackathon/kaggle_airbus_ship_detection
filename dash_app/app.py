@@ -34,7 +34,7 @@ parser.add_argument(
 args = parser.parse_args()
 data_path = args.data_volume
 
-data_path = Path("/media/batman/3D6450257A2A5BEC1/00 DATA/DATA/airbus-ship-detection")
+# data_path = Path("/media/batman/3D6450257A2A5BEC1/00 DATA/DATA/airbus-ship-detection")
 # data_path = Path("/media/batman/f4023177-48c1-456b-bff2-cc769f3ac277/DATA/airbus-ship-detection")
 assert data_path.exists(), "Can't find the data path, {}!".format(data_path)
 img_zip_path = data_path / 'train_v2.zip'
@@ -52,7 +52,7 @@ import random
 # ### DASH
 import dash
 
-print(dash.__version__)
+logging.debug("Dash plotly, version {}".format(dash.__version__))
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_daq as daq
@@ -88,12 +88,11 @@ import cv2
 
 # %%%%%%%%%%%% LOAD IMAGE CLASS
 # TODO: This is just a patch for now, local dev!
-import sys
+# import sys
 
-path_image_class = Path().cwd() / 'src' / '3_EDA'
-path_image_class = path_image_class.resolve()
-sys.path.append(str(path_image_class.absolute()))
-# print(sys.path)
+# path_image_class = Path().cwd() / 'src' / '3_EDA'
+# path_image_class = path_image_class.resolve()
+# sys.path.append(str(path_image_class.absolute()))
 from eda_00_Image_class import Image, convert_rgb_img_to_b64string, fit_kmeans_pixels, convert_rgb_img_to_b64string_straight, get_kmeans_color
 
 # %% UTILS
@@ -121,8 +120,6 @@ app.css.append_css({
 })
 
 # %%%%%%%%%%%% LOAD
-
-
 img_zip = zipfile.ZipFile(img_zip_path)
 
 logging.info(
