@@ -191,6 +191,17 @@ def plot_hist(img, ax):
     # ax.get_xaxis().set_visible(False)
     # ax.get_yaxis().set_visible(False)
 
+def get_RGB(array):
+    colors = list()
+    for c in array:
+        print(c, type(c))
+        # print(c.tolist())
+        this_color = [int(el*255) for el in c.tolist()]
+        # print()
+        # raise
+        colors.append(this_color)
+        # colors.append(this_color)
+    return colors
 
 # %%
 # TODO: THIS FUNCTION IS DOUBLED HERE! FROM eda_00.py!
@@ -209,8 +220,8 @@ def get_kmeans_color(img, _kmeans):
 
     new_pixel_colors = _kmeans.cluster_centers_[_kmeans.predict(original_pixel_locations_flat)]
     logging.info("New pixels, shape {}".format(new_pixel_colors.shape))
-    logging.info("Colors: {}".format(np.unique(new_pixel_colors, axis=0)))
 
+    logging.info("Colors: {}".format(get_RGB(np.unique(new_pixel_colors, axis=0))))
     cluster_labels = np.unique(_kmeans.labels_).tolist()
     logging.info("{} custers: {}".format(len(cluster_labels), cluster_labels))
 

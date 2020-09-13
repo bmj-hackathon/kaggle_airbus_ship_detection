@@ -10,11 +10,11 @@ import dash_html_components as html
 # TODO: This is just a patch for now, local dev!
 import sys
 
-path_image_class = Path().cwd() / 'src' / '3_EDA'
-path_image_class = path_image_class.resolve()
-sys.path.append(str(path_image_class.absolute()))
-print(sys.path)
-from eda_00_Image_class import Image, convert_rgb_img_to_b64string, fit_kmeans_pixels, convert_rgb_img_to_b64string_straight
+# path_image_class = Path().cwd() / 'src' / '3_EDA'
+# path_image_class = path_image_class.resolve()
+# sys.path.append(str(path_image_class.absolute()))
+# print(sys.path)
+from image_utils import Image, convert_rgb_img_to_b64string, fit_kmeans_pixels, convert_rgb_img_to_b64string_straight
 
 def register_callbacks(app, df, df_by_image, img_zip, Image):
 
@@ -105,7 +105,7 @@ def register_callbacks(app, df, df_by_image, img_zip, Image):
         # print("image_id=",image_id)
         image = Image(image_id)
         image.load(img_zip, df)
-        logging.info("GET IMAGE DATA,  num_ships = ".format(image.num_ships))
+        logging.info("Image {}, num_ships = {}".format(image_id, image.num_ships))
         if not image.num_ships:
             jpg_ellipse_image = convert_rgb_img_to_b64string(image.img)
             image_source_string = "data:image/png;base64, {}".format(jpg_ellipse_image)
@@ -159,10 +159,11 @@ def register_callbacks(app, df, df_by_image, img_zip, Image):
     )  # END DECORATOR
     def kmeans_update(n_clicks, n_clusters, image_id):
         if image_id==None:
-            print("Sample image loaded for start!")
+            logging.debug("Loading a fixed sample image on first load".format())
             image_id = '1defabda3.jpg'
-        print('n_clicks', n_clicks, 'n_clusters', n_clusters, 'image_id', image_id)
-        print("START K Means with {} clusters on image {}".format(n_clusters, image_id))
+        # logging.debug("".format())
+        # print('n_clicks', n_clicks, 'n_clusters', n_clusters, 'image_id', image_id)
+        logging.debug("START K Means with {} clusters on image {}".format(n_clusters, image_id))
 
         image = Image(image_id)
         image.load(img_zip, df)
@@ -185,8 +186,8 @@ def register_callbacks(app, df, df_by_image, img_zip, Image):
 
 
         # print("KMEANS IMAGE CANVAS:")
-        print(kmeans_img_canvas)
-        print('kmeans_img_canvas', type(kmeans_img_canvas), kmeans_img_canvas.dtype, kmeans_img_canvas.shape)
+        # print(kmeans_img_canvas)
+        # print('kmeans_img_canvas', type(kmeans_img_canvas), kmeans_img_canvas.dtype, kmeans_img_canvas.shape)
         kmeans_img_canvas = kmeans_img_canvas.astype(np.uint8)
 
         # Build an image HTML object

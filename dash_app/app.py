@@ -93,18 +93,20 @@ import cv2
 # path_image_class = Path().cwd() / 'src' / '3_EDA'
 # path_image_class = path_image_class.resolve()
 # sys.path.append(str(path_image_class.absolute()))
-from eda_00_Image_class import Image, convert_rgb_img_to_b64string, fit_kmeans_pixels, convert_rgb_img_to_b64string_straight, get_kmeans_color
+from image_utils import Image, convert_rgb_img_to_b64string, fit_kmeans_pixels, convert_rgb_img_to_b64string_straight
+#, #get_kmeans_color
+
 
 # %% UTILS
 from utils import *
 #%%
 try:
     from callbacks import register_callbacks
-    from figures import test_fig
+    # from figures import test_fig
 except:
     sys.path.append( str(Path.cwd().joinpath('dash_app')) )
     from callbacks import register_callbacks
-    from figures import test_fig
+    # from figures import test_fig
 
 # %% General, entry point
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
