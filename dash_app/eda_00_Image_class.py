@@ -15,7 +15,12 @@ class SimpleImage:
 
 class Image():
     def __init__(self, image_id):
-        """
+        """An object representing a full satellite image with ships and it's metadata.
+
+        An image record is identified by the init parameter `image_id`.
+        Images are stored in a zip file, and loaded on demand using the `.load(zip_path, df)`. method.
+        The zip file path is needed, as well as a Dataframe object holding the metadata. The
+        metadata for an image is the list of ship location records.
 
         :param image_id:
 
