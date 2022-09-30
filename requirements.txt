@@ -14,7 +14,7 @@ future==0.18.2
 -e git+https://github.com/MarcusJones/imutils@e0463e7c8f903df03fa4211833173917660e562b#egg=imutils
 itsdangerous==1.1.0
 jinja2==2.11.2
-joblib==0.16.0
+joblib==1.2.0
 kiwisolver==1.2.0
 markupsafe==1.1.1
 matplotlib==3.3.1
